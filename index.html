@@ -152,6 +152,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="tab" data-tab="inventory">Inventory</div>
     <div class="tab" data-tab="log">Log</div>
     <div class="tab" data-tab="stats">Stats</div>
+    <div class="tab" data-tab="manage">Manage</div>
   </div>
 
   <div class="panel active" id="panel-sell">
@@ -205,6 +206,108 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div class="panel" id="panel-stats">
     <div id="stats-content"></div>
+  </div>
+
+  <div class="panel" id="panel-manage">
+    <div class="manage-toggle" style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="discount-btn active" id="mg-btn-add" onclick="showManageSection('add')">Add New Item</button>
+      <button class="discount-btn" id="mg-btn-restock" onclick="showManageSection('restock')">Restock</button>
+      <button class="discount-btn" id="mg-btn-edit" onclick="showManageSection('edit')">Edit Item</button>
+    </div>
+
+    <!-- ADD NEW ITEM -->
+    <div id="manage-add">
+      <div class="sell-section">
+        <label>Item Name</label>
+        <input type="text" class="sell-input" id="add-name" placeholder="e.g. Neon Pink Tee" />
+      </div>
+      <div class="sell-section">
+        <label>Category</label>
+        <select class="sell-select" id="add-type">
+          <option value="tshirt">T-Shirt ($25)</option>
+          <option value="longsleeve">Long Sleeve ($40)</option>
+          <option value="hoodie">Hoodie ($45)</option>
+          <option value="hat">Hat ($30)</option>
+          <option value="crop">Crop Top ($25)</option>
+          <option value="jersey">Jersey ($25)</option>
+        </select>
+      </div>
+      <div class="sell-section">
+        <label>Location</label>
+        <select class="sell-select" id="add-location">
+          <option value="office">Office / Floor</option>
+          <option value="storage">Storage Unit</option>
+        </select>
+      </div>
+      <div class="sell-section">
+        <label>Our Cost ($)</label>
+        <input type="number" class="sell-input" id="add-cost" placeholder="e.g. 10" />
+      </div>
+      <div class="sell-section">
+        <label>Sizes & Quantities</label>
+        <p style="color:var(--dim);font-size:0.8em;margin-bottom:8px">Enter quantity for each size. Leave blank or 0 for sizes you don't have.</p>
+        <div id="add-sizes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        </div>
+        <div style="margin-top:8px">
+          <input type="checkbox" id="add-onesize" style="accent-color:var(--accent)" onchange="toggleOneSize()">
+          <label for="add-onesize" style="color:var(--dim);font-size:0.85em">One Size (hats, etc.)</label>
+        </div>
+      </div>
+      <button class="record-btn" onclick="addNewItem()">Add Item</button>
+    </div>
+
+    <!-- RESTOCK -->
+    <div id="manage-restock" style="display:none">
+      <div class="sell-section">
+        <label>Select Item to Restock</label>
+        <select class="sell-select" id="restock-item" onchange="onRestockItemChange()">
+          <option value="">-- Choose --</option>
+        </select>
+      </div>
+      <div id="restock-sizes" style="display:none">
+        <div class="sell-section">
+          <label>Add quantities per size</label>
+          <div id="restock-sizes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+        </div>
+        <button class="record-btn" onclick="restockItem()">Restock</button>
+      </div>
+    </div>
+
+    <!-- EDIT ITEM -->
+    <div id="manage-edit" style="display:none">
+      <div class="sell-section">
+        <label>Select Item to Edit</label>
+        <select class="sell-select" id="edit-item" onchange="onEditItemChange()">
+          <option value="">-- Choose --</option>
+        </select>
+      </div>
+      <div id="edit-fields" style="display:none">
+        <div class="sell-section">
+          <label>Item Name</label>
+          <input type="text" class="sell-input" id="edit-name" />
+        </div>
+        <div class="sell-section">
+          <label>Category</label>
+          <select class="sell-select" id="edit-type">
+            <option value="tshirt">T-Shirt ($25)</option>
+            <option value="longsleeve">Long Sleeve ($40)</option>
+            <option value="hoodie">Hoodie ($45)</option>
+            <option value="hat">Hat ($30)</option>
+            <option value="crop">Crop Top ($25)</option>
+            <option value="jersey">Jersey ($25)</option>
+          </select>
+        </div>
+        <div class="sell-section">
+          <label>Location</label>
+          <select class="sell-select" id="edit-location">
+            <option value="office">Office / Floor</option>
+            <option value="storage">Storage Unit</option>
+          </select>
+        </div>
+        <button class="record-btn" onclick="saveEditItem()">Save Changes</button>
+        <button class="record-btn" style="background:var(--surface);border:1px solid var(--accent);color:var(--accent);margin-top:8px" onclick="deleteItem()">Delete Item</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -746,6 +849,183 @@ function undoSale(saleId) {
   renderStats();
   showToast('Sale undone');
 }
+
+// ============ MANAGE ============
+const ALL_SIZES = ['XS','S','M','L','XL','XXL','XXXL','XXXXL'];
+
+function showManageSection(section) {
+  ['add','restock','edit'].forEach(s => {
+    document.getElementById('manage-' + s).style.display = s === section ? 'block' : 'none';
+    document.getElementById('mg-btn-' + s).classList.toggle('active', s === section);
+  });
+  if (section === 'restock') populateRestockDropdown();
+  if (section === 'edit') populateEditDropdown();
+}
+
+// -- ADD NEW ITEM --
+function renderAddSizes() {
+  const grid = document.getElementById('add-sizes-grid');
+  const oneSize = document.getElementById('add-onesize').checked;
+  if (oneSize) {
+    grid.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+      <span style="color:var(--dim);min-width:35px">OS</span>
+      <input type="number" class="sell-input" data-sz="OS" placeholder="0" style="margin:0" />
+    </div>`;
+  } else {
+    grid.innerHTML = ALL_SIZES.map(sz => `<div style="display:flex;align-items:center;gap:8px">
+      <span style="color:var(--dim);min-width:40px">${sz}</span>
+      <input type="number" class="sell-input" data-sz="${sz}" placeholder="0" style="margin:0" />
+    </div>`).join('');
+  }
+}
+function toggleOneSize() { renderAddSizes(); }
+
+function addNewItem() {
+  const name = document.getElementById('add-name').value.trim();
+  if (!name) { showToast('Enter an item name'); return; }
+  const type = document.getElementById('add-type').value;
+  const location = document.getElementById('add-location').value;
+  const costVal = parseFloat(document.getElementById('add-cost').value) || COST.default;
+
+  const sizes = {};
+  document.querySelectorAll('#add-sizes-grid input[data-sz]').forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) sizes[inp.dataset.sz] = qty;
+  });
+
+  if (Object.keys(sizes).length === 0) { showToast('Add at least one size with quantity'); return; }
+
+  const id = 'custom-' + Date.now();
+  const costKey = 'custom-' + id;
+  COST[costKey] = costVal;
+
+  inventory[id] = { id, name, type, location, costKey, sizes };
+  saveInventory();
+  // Save custom costs
+  localStorage.setItem('elbo-custom-costs', JSON.stringify(
+    Object.fromEntries(Object.entries(COST).filter(([k]) => k.startsWith('custom-')))
+  ));
+
+  showToast(`Added: ${name}`);
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-cost').value = '';
+  renderAddSizes();
+  populateSellDropdown();
+  renderInventory();
+  renderStats();
+}
+
+// -- RESTOCK --
+function populateRestockDropdown() {
+  const sel = document.getElementById('restock-item');
+  sel.innerHTML = '<option value="">-- Choose Item --</option>';
+  Object.values(inventory).sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+    const loc = item.location === 'storage' ? ' [Storage]' : '';
+    const o = document.createElement('option');
+    o.value = item.id;
+    o.textContent = item.name + loc;
+    sel.appendChild(o);
+  });
+}
+
+function onRestockItemChange() {
+  const id = document.getElementById('restock-item').value;
+  if (!id) { document.getElementById('restock-sizes').style.display = 'none'; return; }
+  const item = inventory[id];
+  const grid = document.getElementById('restock-sizes-grid');
+  const existingSizes = Object.keys(item.sizes);
+  const sizesToShow = existingSizes.includes('OS') ? ['OS'] : ALL_SIZES;
+
+  grid.innerHTML = sizesToShow.map(sz => {
+    const current = item.sizes[sz] || 0;
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <span style="color:var(--dim);min-width:40px">${sz}</span>
+      <input type="number" class="sell-input" data-sz="${sz}" placeholder="+0" style="margin:0" />
+      <span style="color:var(--dim);font-size:0.8em">(now: ${current})</span>
+    </div>`;
+  }).join('');
+  document.getElementById('restock-sizes').style.display = 'block';
+}
+
+function restockItem() {
+  const id = document.getElementById('restock-item').value;
+  if (!id) return;
+  const item = inventory[id];
+  let added = 0;
+  document.querySelectorAll('#restock-sizes-grid input[data-sz]').forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) {
+      item.sizes[inp.dataset.sz] = (item.sizes[inp.dataset.sz] || 0) + qty;
+      added += qty;
+    }
+  });
+  if (added === 0) { showToast('Enter quantities to add'); return; }
+  saveInventory();
+  showToast(`Restocked ${item.name}: +${added} units`);
+  onRestockItemChange();
+  populateSellDropdown();
+  renderInventory();
+  renderStats();
+}
+
+// -- EDIT ITEM --
+function populateEditDropdown() {
+  const sel = document.getElementById('edit-item');
+  sel.innerHTML = '<option value="">-- Choose Item --</option>';
+  Object.values(inventory).sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+    const loc = item.location === 'storage' ? ' [Storage]' : '';
+    const o = document.createElement('option');
+    o.value = item.id;
+    o.textContent = item.name + loc;
+    sel.appendChild(o);
+  });
+}
+
+function onEditItemChange() {
+  const id = document.getElementById('edit-item').value;
+  if (!id) { document.getElementById('edit-fields').style.display = 'none'; return; }
+  const item = inventory[id];
+  document.getElementById('edit-name').value = item.name;
+  document.getElementById('edit-type').value = item.type;
+  document.getElementById('edit-location').value = item.location;
+  document.getElementById('edit-fields').style.display = 'block';
+}
+
+function saveEditItem() {
+  const id = document.getElementById('edit-item').value;
+  if (!id) return;
+  inventory[id].name = document.getElementById('edit-name').value.trim();
+  inventory[id].type = document.getElementById('edit-type').value;
+  inventory[id].location = document.getElementById('edit-location').value;
+  saveInventory();
+  showToast('Item updated');
+  populateSellDropdown();
+  populateEditDropdown();
+  renderInventory();
+  renderStats();
+}
+
+function deleteItem() {
+  const id = document.getElementById('edit-item').value;
+  if (!id) return;
+  const name = inventory[id].name;
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  delete inventory[id];
+  saveInventory();
+  showToast(`Deleted: ${name}`);
+  document.getElementById('edit-fields').style.display = 'none';
+  populateSellDropdown();
+  populateEditDropdown();
+  renderInventory();
+  renderStats();
+}
+
+// Load custom costs from localStorage
+const savedCosts = JSON.parse(localStorage.getItem('elbo-custom-costs') || '{}');
+Object.assign(COST, savedCosts);
+
+// Init add sizes grid
+renderAddSizes();
 
 // ============ BOOT ============
 init();
