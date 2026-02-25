@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elbo Room - Merch Tracker</title>
+<style>
+:root {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e; --border: #2a2a2a;
+  --text: #e0e0e0; --dim: #888; --accent: #ff3b3b; --accent2: #ff6b6b;
+  --green: #4caf50; --yellow: #ffc107; --blue: #42a5f5;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* PASSWORD */
+#password-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:4px; }
+/* LOGIN */
+#login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:20px; }
+#login-screen h1 { font-size:2em; color:var(--accent); letter-spacing:2px; }
+#login-screen .pin-display { font-size:2.5em; letter-spacing:15px; color:var(--accent); min-height:50px; }
+.pin-pad { display:grid; grid-template-columns:repeat(3,80px); gap:10px; }
+.pin-btn { width:80px; height:60px; font-size:1.5em; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; cursor:pointer; }
+.pin-btn:active { background:var(--accent); }
+.pin-btn.clear { font-size:0.9em; color:var(--accent); }
+#login-error { color:var(--accent); min-height:20px; }
+
+/* NAV */
+#app { display:none; }
+.top-bar { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.top-bar h2 { font-size:1em; color:var(--accent); }
+.top-bar .user-badge { color:var(--dim); font-size:0.85em; }
+.tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; }
+.tab { padding:10px 16px; color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; font-size:0.9em; }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* PANELS */
+.panel { display:none; padding:16px; }
+.panel.active { display:block; }
+
+/* INVENTORY */
+.category-header { font-size:1.1em; color:var(--accent2); margin:20px 0 8px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+.category-header:first-child { margin-top:0; }
+.item-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:8px; }
+.item-card .item-name { font-weight:600; margin-bottom:6px; display:flex; justify-content:space-between; }
+.item-card .item-total { color:var(--green); font-size:0.9em; }
+.size-grid { display:flex; flex-wrap:wrap; gap:6px; }
+.size-chip { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:0.8em; min-width:55px; text-align:center; }
+.size-chip .sz { color:var(--dim); }
+.size-chip .ct { color:var(--text); font-weight:600; }
+.size-chip.zero { opacity:0.3; }
+.location-tag { font-size:0.7em; color:var(--blue); background:rgba(66,165,245,0.15); padding:2px 6px; border-radius:3px; margin-left:6px; }
+
+/* SELL */
+.sell-section { margin-bottom:16px; }
+.sell-section label { display:block; color:var(--dim); font-size:0.85em; margin-bottom:6px; }
+.sell-select, .sell-input { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-bottom:12px; }
+.sell-select option { background:var(--surface); }
+.size-sell-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+.size-sell-btn { padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; cursor:pointer; text-align:center; font-size:0.9em; }
+.size-sell-btn.selected { border-color:var(--accent); background:rgba(255,59,59,0.15); color:var(--accent); }
+.size-sell-btn .avail { font-size:0.7em; color:var(--dim); display:block; }
+.sell-qty { display:flex; align-items:center; gap:12px; justify-content:center; margin:12px 0; }
+.sell-qty button { width:44px; height:44px; font-size:1.3em; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:6px; cursor:pointer; }
+.sell-qty span { font-size:1.5em; min-width:40px; text-align:center; }
+.price-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--border); margin-top:8px; }
+.price-row .label { color:var(--dim); }
+.price-row .val { font-weight:600; }
+.discount-row { display:flex; gap:8px; margin:8px 0; }
+.discount-btn { flex:1; padding:8px; background:var(--surface); border:1px solid var(--border); color:var(--dim); border-radius:6px; cursor:pointer; font-size:0.85em; text-align:center; }
+.discount-btn.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,193,7,0.1); }
+.record-btn { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; cursor:pointer; margin-top:12px; }
+.record-btn:disabled { opacity:0.4; cursor:default; }
+.custom-price-input { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-top:8px; display:none; }
+
+/* LOG */
+.log-entry { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.log-entry .info { font-size:0.9em; }
+.log-entry .info .item-sold { font-weight:600; }
+.log-entry .info .meta { color:var(--dim); font-size:0.8em; }
+.log-entry .amount { font-weight:600; color:var(--green); }
+.log-entry .amount.discount { color:var(--yellow); }
+.day-total { background:var(--surface2); padding:12px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-around; text-align:center; }
+.day-total .stat-val { font-size:1.3em; font-weight:700; }
+.day-total .stat-label { font-size:0.75em; color:var(--dim); }
+.log-filter { display:flex; gap:8px; margin-bottom:12px; }
+.log-filter button { padding:6px 12px; background:var(--surface); border:1px solid var(--border); color:var(--dim); border-radius:6px; cursor:pointer; font-size:0.85em; }
+.log-filter button.active { color:var(--accent); border-color:var(--accent); }
+
+/* STATS */
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; }
+.stat-card h3 { color:var(--accent2); font-size:0.9em; margin-bottom:10px; }
+.stat-row { display:flex; justify-content:space-between; padding:4px 0; font-size:0.9em; }
+.stat-row .label { color:var(--dim); }
+
+/* SEARCH */
+.search-box { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-bottom:12px; }
+
+/* RESPONSIVE */
+@media(max-width:400px) {
+  .pin-pad { grid-template-columns:repeat(3,70px); }
+  .pin-btn { width:70px; height:55px; }
+  .size-sell-grid { grid-template-columns:repeat(3,1fr); }
+}
+
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 20px; border-radius:8px; font-weight:600; z-index:999; display:none; }
+.undo-btn { background:none; border:1px solid #fff; color:#fff; padding:4px 10px; border-radius:4px; margin-left:10px; cursor:pointer; font-size:0.85em; }
+</style>
+</head>
+<body>
+
+<div id="password-screen">
+  <h1>ELBO ROOM</h1>
+  <p style="color:var(--dim);margin-bottom:8px">Enter Password</p>
+  <input type="password" id="pw-input" style="width:220px;padding:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:1.1em;text-align:center" placeholder="Password" onkeydown="if(event.key==='Enter')pwSubmit()" />
+  <div style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+    <input type="checkbox" id="pw-remember" style="accent-color:var(--accent)">
+    <label for="pw-remember" style="color:var(--dim);font-size:0.85em">Remember this device</label>
+  </div>
+  <button onclick="pwSubmit()" style="margin-top:16px;padding:10px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:1em;cursor:pointer">Enter</button>
+  <div id="pw-error" style="color:var(--accent);min-height:20px;margin-top:8px"></div>
+</div>
+
+<div id="login-screen" style="display:none">
+  <h1>ELBO ROOM</h1>
+  <p style="color:var(--dim)">Enter PIN</p>
+  <div class="pin-display" id="pin-display"></div>
+  <div id="login-error"></div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn clear" onclick="pinClear()">CLR</button>
+    <button class="pin-btn" onclick="pinPress('0')">0</button>
+    <button class="pin-btn" onclick="pinSubmit()">OK</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="top-bar">
+    <h2>ELBO MERCH</h2>
+    <span class="user-badge" id="user-badge"></span>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="sell">Sell</div>
+    <div class="tab" data-tab="inventory">Inventory</div>
+    <div class="tab" data-tab="log">Log</div>
+    <div class="tab" data-tab="stats">Stats</div>
+  </div>
+
+  <div class="panel active" id="panel-sell">
+    <div class="sell-section">
+      <label>Select Item</label>
+      <select class="sell-select" id="sell-item" onchange="onSellItemChange()">
+        <option value="">-- Choose --</option>
+      </select>
+    </div>
+    <div class="sell-section" id="sell-size-section" style="display:none">
+      <label>Select Size</label>
+      <div class="size-sell-grid" id="sell-sizes"></div>
+    </div>
+    <div id="sell-details" style="display:none">
+      <div class="sell-qty">
+        <button onclick="adjQty(-1)">-</button>
+        <span id="sell-qty-display">1</span>
+        <button onclick="adjQty(1)">+</button>
+      </div>
+      <div class="discount-row">
+        <div class="discount-btn" data-disc="0" onclick="setDiscount(0)">Full Price</div>
+        <div class="discount-btn" data-disc="0.5" onclick="setDiscount(0.5)">50% Off</div>
+        <div class="discount-btn" data-disc="1" onclick="setDiscount(1)">Free</div>
+        <div class="discount-btn" data-disc="custom" onclick="setDiscount('custom')">Custom</div>
+      </div>
+      <input type="number" class="custom-price-input" id="custom-price" placeholder="Enter custom price" />
+      <div class="price-row"><span class="label">Unit Price</span><span class="val" id="unit-price">$0</span></div>
+      <div class="price-row"><span class="label">Total</span><span class="val" id="sell-total">$0</span></div>
+      <div class="sell-section" style="margin-top:8px">
+        <label>Note (optional)</label>
+        <input type="text" class="sell-input" id="sell-note" placeholder="e.g. staff comp, promo..." style="margin-bottom:0" />
+      </div>
+      <button class="record-btn" id="record-btn" onclick="recordSale()">Record Sale</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-inventory">
+    <input type="text" class="search-box" placeholder="Search items..." oninput="filterInventory(this.value)" />
+    <div id="inventory-list"></div>
+  </div>
+
+  <div class="panel" id="panel-log">
+    <div class="day-total" id="day-totals"></div>
+    <div class="log-filter" id="log-filter">
+      <button class="active" data-f="today" onclick="filterLog('today')">Today</button>
+      <button data-f="week" onclick="filterLog('week')">This Week</button>
+      <button data-f="all" onclick="filterLog('all')">All</button>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+  <div class="panel" id="panel-stats">
+    <div id="stats-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ DATA ============
+const USERS = {
+  '1111': 'Austin',
+  '2222': 'Elyse',
+  '3333': 'Adam',
+  '4444': 'Cass'
+};
+
+const PRICING = {
+  'tshirt': { retail: 25, category: 'T-Shirts' },
+  'longsleeve': { retail: 40, category: 'Long Sleeves' },
+  'hoodie': { retail: 45, category: 'Hoodies' },
+  'hat': { retail: 30, category: 'Hats' },
+  'crop': { retail: 25, category: 'Crop Tops' },
+  'jersey': { retail: 25, category: 'Jerseys' },
+};
+
+const COST = {
+  'neon': 10, 'camo': 16, 'hat': 12, 'hoodie': 17, 'default': 12
+};
+
+// Full inventory from Austin's email (Feb 25, 2026)
+const INIT_INVENTORY = [
+  // ---- T-SHIRTS (Office/Floor) ----
+  { id: 'stpatrick-green', name: "St. Patrick's Day Green Tee", type: 'tshirt', location: 'office', sizes: {S:13,M:16,L:1,XL:11,XXL:6} },
+  { id: 'black-neon', name: 'Black Neon Tee', type: 'tshirt', location: 'office', costKey:'neon', sizes: {S:250,M:0,L:0,XL:75,XXL:120,XXXL:51} },
+  { id: 'blue-pink', name: 'Blue (Pink Logo) Tee', type: 'tshirt', location: 'office', sizes: {S:2,M:0,L:1,XL:24,XXL:14,XXXL:25} },
+  { id: 'teal-fishing', name: 'Teal Fishing Shirt', type: 'tshirt', location: 'office', sizes: {XS:4,S:5,M:0,L:1,XL:58,XXL:3,XXXL:4} },
+  { id: 'blue-fishing', name: 'Blue Fishing Shirt', type: 'tshirt', location: 'office', sizes: {S:20,M:12,L:0,XL:12,XXL:2,XXXL:1} },
+  { id: 'grey-fishing', name: 'Grey Fishing Shirt', type: 'tshirt', location: 'office', sizes: {XS:6,S:10,M:22,L:3,XL:6,XXL:0,XXXL:4} },
+  { id: 'tkachuk-red', name: 'Tkachuk Red Tee', type: 'tshirt', location: 'office', sizes: {S:60,M:19,L:12,XL:12,XXL:23} },
+  { id: 'black-old-logo', name: 'Black (Old Logo) Tee [DISCONTINUED]', type: 'tshirt', location: 'office', sizes: {S:20,M:0,L:1} },
+  { id: 'rwb-tee', name: 'Red, White, Blue Tee', type: 'tshirt', location: 'office', sizes: {S:19,M:33,L:0,XL:7,XXL:1} },
+
+  // ---- LONG SLEEVES (Office) ----
+  { id: 'green-longsleeve', name: 'New Green Long Sleeve', type: 'longsleeve', location: 'office', sizes: {M:16,L:12,XXL:18,XXXL:3} },
+  { id: 'coral-ls-comfort', name: 'Comfort Color LS Coral', type: 'longsleeve', location: 'office', sizes: {S:2,XXL:8} },
+  { id: 'seafoam-ls-comfort', name: 'Comfort Color LS Seafoam', type: 'longsleeve', location: 'office', sizes: {XXL:6} },
+
+  // ---- CROP TOPS (Office) ----
+  { id: 'teal-crop', name: 'Teal Ladies Crop Top', type: 'crop', location: 'office', sizes: {S:10,M:16,L:15,XL:27} },
+  { id: 'light-blue-crop', name: 'Light Blue Crop', type: 'crop', location: 'office', sizes: {M:24,L:12,XL:8} },
+  { id: 'light-green-crop', name: 'Light Green Crop', type: 'crop', location: 'office', sizes: {M:6,L:15,XL:15} },
+  { id: 'coral-crop', name: 'Coral Crop', type: 'crop', location: 'office', sizes: {M:7,L:16,XL:20} },
+  { id: 'mermaid-black-crop', name: 'Mermaid Black Crop', type: 'crop', location: 'office', sizes: {S:2,M:10,L:14,XL:9,XXL:2} },
+  { id: 'mermaid-white-crop', name: 'Mermaid White Crop', type: 'crop', location: 'office', sizes: {S:9,M:1,L:3,XL:4,XXL:1} },
+  { id: 'diamond-green-crop', name: 'Diamond Crop Green', type: 'crop', location: 'office', sizes: {M:6,L:15,XL:15} },
+  { id: 'diamond-coral-crop', name: 'Diamond Crop Coral', type: 'crop', location: 'office', sizes: {M:7,L:16,XL:20} },
+  { id: 'diamond-blue-crop', name: 'Diamond Crop Blue', type: 'crop', location: 'office', sizes: {M:24,L:12,XL:8} },
+  { id: 'diamond-black-crop', name: 'Diamond Crop Black', type: 'crop', location: 'office', sizes: {M:3,L:9,XL:17} },
+
+  // ---- HOODIES (Office) ----
+  { id: 'black-neon-hoodie', name: 'Black Neon Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {S:10,M:20,XXL:6} },
+  { id: 'tan-hoodie', name: 'Tan Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {S:28,M:15,L:11} },
+  { id: 'white-zip-old', name: 'White Zip Up Hoodie (Old)', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {XS:1,M:6,L:17} },
+  { id: 'red-zip-old', name: 'Red Zip Hoodie (Old)', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {L:13,XXXXL:2} },
+  { id: 'red-panthers-hoodie', name: 'Red Elbo/Panthers Jersey Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {M:1,XL:1,XXL:1,XXXL:2} },
+
+  // ---- JERSEYS (Office) ----
+  { id: 'bills-jersey', name: 'Bills/Elbo Room Jersey', type: 'jersey', location: 'office', sizes: {S:72,M:72,XXL:28} },
+
+  // ---- HATS (Office) ----
+  { id: 'hat-camo', name: 'Camo Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':187} },
+  { id: 'hat-yellow-palm', name: 'Yellow Palm Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':175} },
+  { id: 'hat-blue-palm', name: 'Blue Palm Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':196} },
+  { id: 'hat-usd-black', name: 'Upside Down Logo Black Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':188} },
+  { id: 'hat-usd-white', name: 'Upside Down Logo White Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':254} },
+  { id: 'hat-rwb', name: 'Red White Blue Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':94} },
+  { id: 'hat-suede', name: 'Elbo Suede Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':7} },
+  { id: 'hat-blue-red-patch', name: 'Blue w/ Red Elbo Patch Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':56} },
+  { id: 'hat-black-bold', name: 'Black & Off White Bold ElboRoom Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':21} },
+  { id: 'hat-black-camo', name: 'Black & White w/ Camo Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':77} },
+  { id: 'hat-drink-burgundy', name: 'Drinking Club Burgundy Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':0} },
+  { id: 'hat-drink-green', name: 'Drinking Club Green Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':30} },
+  // White, Black & Red 90's logo
+  { id: 'wbr-90s', name: "White, Black & Red 90's Logo Tee", type: 'tshirt', location: 'office', sizes: {S:11,XXXL:2} },
+  // Blue Zip old logo
+  { id: 'blue-zip-old', name: 'Blue Zip Old Logo Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {XS:4,XXXXL:3} },
+
+  // ============ STORAGE UNIT ============
+  // Hats
+  { id: 'sto-hat-drink-burgundy', name: 'Drinking Club Burgundy Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':0} },
+  { id: 'sto-hat-drink-green', name: 'Drinking Club Green Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':10} },
+  { id: 'sto-hat-black-camo', name: 'Black, White & Camo Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':143} },
+  { id: 'sto-hat-rw', name: 'Red, White Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':45} },
+  { id: 'sto-hat-blue-red-patch', name: 'Blue w/ Red Elbo Patch Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':148} },
+  { id: 'sto-hat-black-bold', name: 'Black w/ Bold ElboRoom Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':198} },
+  { id: 'sto-hat-yellow-palm', name: 'Yellow Palm Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':220} },
+  { id: 'sto-hat-blue-palm', name: 'Blue Palm Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':211} },
+  { id: 'sto-hat-camo', name: 'Camo Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':216} },
+  { id: 'sto-hat-suede', name: 'Elbo Suede Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':1310} },
+  { id: 'sto-hat-usd-black', name: 'Upside Down Logo Black Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':490} },
+  { id: 'sto-hat-usd-white', name: 'Upside Down Logo White Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':497} },
+  // Shirts
+  { id: 'sto-camo-tee', name: 'Camo Tee', type: 'tshirt', location: 'storage', costKey:'camo', sizes: {S:29} },
+  { id: 'sto-lightgreen-tee', name: 'Light Green Tee', type: 'tshirt', location: 'storage', sizes: {S:30,M:36,L:12,XL:12,XXL:48,XXXL:12} },
+  { id: 'sto-neon-tee', name: 'Neon Tee', type: 'tshirt', location: 'storage', costKey:'neon', sizes: {S:6,M:50,L:57,XL:75,XXL:109} },
+  { id: 'sto-tkachuk-tee', name: 'Red Tkachuk Tee', type: 'tshirt', location: 'storage', sizes: {S:8,M:3,XXL:12,XXXL:10} },
+  // Jerseys
+  { id: 'sto-bills-jersey', name: 'Bills/Elbo Jersey', type: 'jersey', location: 'storage', sizes: {XXL:47} },
+  // Hoodies
+  { id: 'sto-panthers-hoodie', name: 'Elbo/Panthers Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {M:9,L:10,XL:7,XXL:73} },
+  { id: 'sto-tan-hoodie', name: 'Tan Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {S:43,M:26,XL:6} },
+  { id: 'sto-neon-hoodie', name: 'Neon Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {S:6,M:25,XL:4,XXL:77} },
+];
+
+// ============ PASSWORD GATE ============
+const PW_HASH = 'e7538fe100cdd27b801a796e5c4603b344c8a1c293e2446511c144c399a369d8';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function pwSubmit() {
+  const pw = document.getElementById('pw-input').value;
+  const hash = await sha256(pw);
+  if (hash === PW_HASH) {
+    if (document.getElementById('pw-remember').checked) {
+      localStorage.setItem('elbo-pw-ok', hash);
+    }
+    document.getElementById('password-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  } else {
+    document.getElementById('pw-error').textContent = 'Wrong password';
+    document.getElementById('pw-input').value = '';
+  }
+}
+
+// Check remembered device
+if (localStorage.getItem('elbo-pw-ok') === PW_HASH) {
+  document.getElementById('password-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ============ STATE ============
+let currentUser = null;
+let pin = '';
+let inventory = {};
+let salesLog = [];
+let sellState = { itemId: null, size: null, qty: 1, discount: 0 };
+
+function init() {
+  const saved = localStorage.getItem('elbo-inventory');
+  if (saved) {
+    inventory = JSON.parse(saved);
+  } else {
+    // Build from initial data
+    INIT_INVENTORY.forEach(item => {
+      inventory[item.id] = { ...item, sizes: { ...item.sizes } };
+    });
+    saveInventory();
+  }
+  salesLog = JSON.parse(localStorage.getItem('elbo-sales') || '[]');
+}
+
+function saveInventory() { localStorage.setItem('elbo-inventory', JSON.stringify(inventory)); }
+function saveSales() { localStorage.setItem('elbo-sales', JSON.stringify(salesLog)); }
+
+// ============ LOGIN ============
+function pinPress(n) {
+  if (pin.length < 4) { pin += n; updatePinDisplay(); }
+  if (pin.length === 4) setTimeout(pinSubmit, 150);
+}
+function pinClear() { pin = ''; updatePinDisplay(); document.getElementById('login-error').textContent = ''; }
+function updatePinDisplay() { document.getElementById('pin-display').textContent = '•'.repeat(pin.length); }
+function pinSubmit() {
+  if (USERS[pin]) {
+    currentUser = USERS[pin];
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-badge').textContent = currentUser;
+    populateSellDropdown();
+    renderInventory();
+    renderLog();
+    renderStats();
+  } else {
+    document.getElementById('login-error').textContent = 'Invalid PIN';
+    pin = '';
+    updatePinDisplay();
+  }
+}
+
+// ============ TABS ============
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// ============ SELL ============
+function populateSellDropdown() {
+  const sel = document.getElementById('sell-item');
+  sel.innerHTML = '<option value="">-- Choose Item --</option>';
+  const grouped = {};
+  Object.values(inventory).forEach(item => {
+    const cat = PRICING[item.type]?.category || 'Other';
+    const loc = item.location === 'storage' ? ' [Storage]' : '';
+    if (!grouped[cat]) grouped[cat] = [];
+    const total = Object.values(item.sizes).reduce((a,b) => a+b, 0);
+    if (total > 0) grouped[cat].push({ id: item.id, name: item.name + loc, total });
+  });
+  Object.keys(grouped).sort().forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = cat;
+    grouped[cat].forEach(i => {
+      const o = document.createElement('option');
+      o.value = i.id;
+      o.textContent = `${i.name} (${i.total})`;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+}
+
+function onSellItemChange() {
+  const id = document.getElementById('sell-item').value;
+  sellState = { itemId: id, size: null, qty: 1, discount: 0 };
+  if (!id) {
+    document.getElementById('sell-size-section').style.display = 'none';
+    document.getElementById('sell-details').style.display = 'none';
+    return;
+  }
+  const item = inventory[id];
+  const grid = document.getElementById('sell-sizes');
+  grid.innerHTML = '';
+  Object.entries(item.sizes).forEach(([sz, ct]) => {
+    const btn = document.createElement('div');
+    btn.className = 'size-sell-btn' + (ct === 0 ? ' zero' : '');
+    btn.innerHTML = `${sz}<span class="avail">${ct} left</span>`;
+    if (ct > 0) btn.onclick = () => selectSize(sz);
+    btn.dataset.sz = sz;
+    grid.appendChild(btn);
+  });
+  document.getElementById('sell-size-section').style.display = 'block';
+  document.getElementById('sell-details').style.display = 'none';
+}
+
+function selectSize(sz) {
+  sellState.size = sz;
+  sellState.qty = 1;
+  sellState.discount = 0;
+  document.querySelectorAll('.size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz === sz));
+  document.querySelectorAll('.discount-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.discount-btn[data-disc="0"]').classList.add('active');
+  document.getElementById('custom-price').style.display = 'none';
+  document.getElementById('sell-details').style.display = 'block';
+  updateSellTotal();
+}
+
+function adjQty(d) {
+  const item = inventory[sellState.itemId];
+  const max = item.sizes[sellState.size] || 0;
+  sellState.qty = Math.max(1, Math.min(max, sellState.qty + d));
+  updateSellTotal();
+}
+
+function setDiscount(d) {
+  sellState.discount = d;
+  document.querySelectorAll('.discount-btn').forEach(b => b.classList.remove('active'));
+  if (d === 'custom') {
+    document.querySelector('.discount-btn[data-disc="custom"]').classList.add('active');
+    document.getElementById('custom-price').style.display = 'block';
+    document.getElementById('custom-price').focus();
+    document.getElementById('custom-price').oninput = updateSellTotal;
+  } else {
+    document.querySelector(`.discount-btn[data-disc="${d}"]`).classList.add('active');
+    document.getElementById('custom-price').style.display = 'none';
+  }
+  updateSellTotal();
+}
+
+function getRetail() {
+  const item = inventory[sellState.itemId];
+  return PRICING[item.type]?.retail || 25;
+}
+
+function getSellPrice() {
+  if (sellState.discount === 'custom') {
+    return parseFloat(document.getElementById('custom-price').value) || 0;
+  }
+  return getRetail() * (1 - sellState.discount);
+}
+
+function updateSellTotal() {
+  const price = getSellPrice();
+  document.getElementById('sell-qty-display').textContent = sellState.qty;
+  document.getElementById('unit-price').textContent = '$' + price.toFixed(0);
+  document.getElementById('sell-total').textContent = '$' + (price * sellState.qty).toFixed(0);
+  document.getElementById('record-btn').disabled = !sellState.size;
+}
+
+function recordSale() {
+  const item = inventory[sellState.itemId];
+  if (!item || !sellState.size) return;
+  const avail = item.sizes[sellState.size] || 0;
+  if (sellState.qty > avail) { showToast('Not enough stock!'); return; }
+
+  const price = getSellPrice();
+  const total = price * sellState.qty;
+  const costKey = item.costKey || 'default';
+  const cost = COST[costKey] || COST.default;
+
+  const sale = {
+    id: Date.now(),
+    ts: new Date().toISOString(),
+    itemId: item.id,
+    itemName: item.name,
+    type: item.type,
+    location: item.location,
+    size: sellState.size,
+    qty: sellState.qty,
+    unitPrice: price,
+    total: total,
+    cost: cost * sellState.qty,
+    discount: sellState.discount === 'custom' ? 'custom' : (sellState.discount * 100) + '%',
+    note: document.getElementById('sell-note').value.trim(),
+    user: currentUser,
+  };
+
+  // Update inventory
+  item.sizes[sellState.size] -= sellState.qty;
+  saveInventory();
+
+  salesLog.unshift(sale);
+  saveSales();
+
+  showToast(`Sold ${sellState.qty}x ${item.name} (${sellState.size}) - $${total}`, sale.id);
+
+  // Reset
+  document.getElementById('sell-item').value = '';
+  document.getElementById('sell-size-section').style.display = 'none';
+  document.getElementById('sell-details').style.display = 'none';
+  document.getElementById('sell-note').value = '';
+  sellState = { itemId: null, size: null, qty: 1, discount: 0 };
+  populateSellDropdown();
+  renderLog();
+  renderStats();
+  renderInventory();
+}
+
+// ============ INVENTORY ============
+function renderInventory(filter = '') {
+  const container = document.getElementById('inventory-list');
+  const f = filter.toLowerCase();
+  let html = '';
+
+  // Group by location then type
+  ['office', 'storage'].forEach(loc => {
+    const locItems = Object.values(inventory).filter(i => i.location === loc);
+    if (locItems.length === 0) return;
+    const locLabel = loc === 'office' ? 'Office / Floor' : 'Storage Unit';
+    html += `<div class="category-header" style="font-size:1.3em;color:var(--blue);margin-top:16px">${locLabel}</div>`;
+
+    const types = {};
+    locItems.forEach(item => {
+      const cat = PRICING[item.type]?.category || 'Other';
+      if (!types[cat]) types[cat] = [];
+      types[cat].push(item);
+    });
+
+    Object.keys(types).sort().forEach(cat => {
+      const items = types[cat].filter(i => !f || i.name.toLowerCase().includes(f));
+      if (items.length === 0) return;
+      html += `<div class="category-header">${cat}</div>`;
+      items.forEach(item => {
+        const total = Object.values(item.sizes).reduce((a,b) => a+b, 0);
+        html += `<div class="item-card">
+          <div class="item-name">
+            <span>${item.name}</span>
+            <span class="item-total">${total} units</span>
+          </div>
+          <div class="size-grid">
+            ${Object.entries(item.sizes).map(([sz,ct]) =>
+              `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
+            ).join('')}
+          </div>
+        </div>`;
+      });
+    });
+  });
+
+  container.innerHTML = html || '<p style="color:var(--dim);text-align:center;padding:40px">No items found</p>';
+}
+
+function filterInventory(val) { renderInventory(val); }
+
+// ============ LOG ============
+function renderLog(period = 'today') {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const weekAgo = new Date(now - 7*86400000);
+
+  let filtered = salesLog;
+  if (period === 'today') filtered = salesLog.filter(s => s.ts.slice(0,10) === todayStr);
+  else if (period === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
+
+  const totalRev = filtered.reduce((a,s) => a + s.total, 0);
+  const totalCost = filtered.reduce((a,s) => a + (s.cost||0), 0);
+  const totalItems = filtered.reduce((a,s) => a + s.qty, 0);
+
+  document.getElementById('day-totals').innerHTML = `
+    <div><div class="stat-val">${totalItems}</div><div class="stat-label">Items Sold</div></div>
+    <div><div class="stat-val">$${totalRev.toFixed(0)}</div><div class="stat-label">Revenue</div></div>
+    <div><div class="stat-val" style="color:var(--green)">$${(totalRev - totalCost).toFixed(0)}</div><div class="stat-label">Profit</div></div>
+  `;
+
+  const list = document.getElementById('log-list');
+  if (filtered.length === 0) {
+    list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>';
+    return;
+  }
+  list.innerHTML = filtered.map(s => {
+    const isDisc = s.discount !== '0%' && s.discount !== 0;
+    const time = new Date(s.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    return `<div class="log-entry">
+      <div class="info">
+        <div class="item-sold">${s.qty}x ${s.itemName} (${s.size})</div>
+        <div class="meta">${time} by ${s.user}${s.note ? ' — ' + s.note : ''}${isDisc ? ' [' + s.discount + ' off]' : ''}</div>
+      </div>
+      <div class="amount${isDisc?' discount':''}">$${s.total.toFixed(0)}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterLog(period) {
+  document.querySelectorAll('#log-filter button').forEach(b => b.classList.toggle('active', b.dataset.f === period));
+  renderLog(period);
+}
+
+// ============ STATS ============
+function renderStats() {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const monthStr = now.toISOString().slice(0,7);
+
+  const todaySales = salesLog.filter(s => s.ts.slice(0,10) === todayStr);
+  const monthSales = salesLog.filter(s => s.ts.slice(0,7) === monthStr);
+
+  // Top sellers
+  const itemCounts = {};
+  salesLog.forEach(s => {
+    itemCounts[s.itemName] = (itemCounts[s.itemName]||0) + s.qty;
+  });
+  const topSellers = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+  // Total inventory value
+  let totalUnits = 0, totalRetailValue = 0, totalCostValue = 0;
+  Object.values(inventory).forEach(item => {
+    const units = Object.values(item.sizes).reduce((a,b) => a+b, 0);
+    const retail = PRICING[item.type]?.retail || 25;
+    const costKey = item.costKey || 'default';
+    const cost = COST[costKey] || COST.default;
+    totalUnits += units;
+    totalRetailValue += units * retail;
+    totalCostValue += units * cost;
+  });
+
+  const monthRev = monthSales.reduce((a,s) => a+s.total, 0);
+  const monthCost = monthSales.reduce((a,s) => a+(s.cost||0), 0);
+  const monthProfit = monthRev - monthCost;
+
+  let html = `
+    <div class="stat-card">
+      <h3>Inventory Overview</h3>
+      <div class="stat-row"><span class="label">Total Units</span><span>${totalUnits.toLocaleString()}</span></div>
+      <div class="stat-row"><span class="label">Retail Value</span><span>$${totalRetailValue.toLocaleString()}</span></div>
+      <div class="stat-row"><span class="label">Cost Basis</span><span>$${totalCostValue.toLocaleString()}</span></div>
+      <div class="stat-row"><span class="label">Potential Profit</span><span style="color:var(--green)">$${(totalRetailValue-totalCostValue).toLocaleString()}</span></div>
+    </div>
+    <div class="stat-card">
+      <h3>This Month</h3>
+      <div class="stat-row"><span class="label">Items Sold</span><span>${monthSales.reduce((a,s)=>a+s.qty,0)}</span></div>
+      <div class="stat-row"><span class="label">Revenue</span><span>$${monthRev.toFixed(0)}</span></div>
+      <div class="stat-row"><span class="label">Cost</span><span>$${monthCost.toFixed(0)}</span></div>
+      <div class="stat-row"><span class="label">Profit</span><span style="color:var(--green)">$${monthProfit.toFixed(0)}</span></div>
+      <div class="stat-row"><span class="label">Margin</span><span>${monthRev > 0 ? ((monthProfit/monthRev)*100).toFixed(0) : 0}%</span></div>
+    </div>
+  `;
+
+  if (topSellers.length > 0) {
+    html += `<div class="stat-card"><h3>Top Sellers (All Time)</h3>`;
+    topSellers.forEach(([name,ct]) => {
+      html += `<div class="stat-row"><span class="label">${name}</span><span>${ct} sold</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Discount tracking
+  const discounted = salesLog.filter(s => s.discount !== '0%' && s.discount !== 0);
+  if (discounted.length > 0) {
+    const lostRev = discounted.reduce((a,s) => {
+      const fullPrice = (PRICING[s.type]?.retail || 25) * s.qty;
+      return a + (fullPrice - s.total);
+    }, 0);
+    html += `<div class="stat-card">
+      <h3>Discounts / Comps</h3>
+      <div class="stat-row"><span class="label">Discounted Sales</span><span>${discounted.length}</span></div>
+      <div class="stat-row"><span class="label">Revenue Lost</span><span style="color:var(--yellow)">$${lostRev.toFixed(0)}</span></div>
+    </div>`;
+  }
+
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+// ============ TOAST ============
+function showToast(msg, saleId) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg + (saleId ? `<button class="undo-btn" onclick="undoSale(${saleId})">Undo</button>` : '');
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = 'none'; }, 5000);
+}
+
+function undoSale(saleId) {
+  const idx = salesLog.findIndex(s => s.id === saleId);
+  if (idx === -1) return;
+  const sale = salesLog[idx];
+  // Restore inventory
+  if (inventory[sale.itemId]) {
+    inventory[sale.itemId].sizes[sale.size] = (inventory[sale.itemId].sizes[sale.size]||0) + sale.qty;
+    saveInventory();
+  }
+  salesLog.splice(idx, 1);
+  saveSales();
+  document.getElementById('toast').style.display = 'none';
+  populateSellDropdown();
+  renderInventory();
+  renderLog();
+  renderStats();
+  showToast('Sale undone');
+}
+
+// ============ BOOT ============
+init();
+</script>
+</body>
+</html>
