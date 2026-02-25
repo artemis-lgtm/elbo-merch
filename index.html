@@ -659,6 +659,7 @@ function recordSale() {
 
 // ============ VOID SALE ============
 function voidSale(key) {
+  if (!confirm('Are you sure you want to void this sale? This will restore the inventory and cannot be easily undone.')) return;
   if (!confirm('Void this sale? Inventory will be restored.')) return;
   const sale = salesLog.find(s => s._key === key);
   if (!sale || sale.voided) return;
