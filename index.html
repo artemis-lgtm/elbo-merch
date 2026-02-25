@@ -202,7 +202,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <!-- TRANSFER -->
   <div class="panel" id="panel-transfer">
-    <p style="color:var(--dim);font-size:0.85em;margin-bottom:16px">Move items between Office and Storage without recording a sale.</p>
+    <p style="color:var(--dim);font-size:0.85em;margin-bottom:16px">Move items between locations without recording a sale.</p>
     <div class="f-section">
       <label>From</label>
       <select class="f-select" id="transfer-from" onchange="onTransferFromChange()">
@@ -211,7 +211,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <option value="storage">Storage Unit</option>
       </select>
     </div>
-    <div class="f-section">
+    <div class="f-section" id="transfer-to-section" style="display:none">
+      <label>To</label>
+      <select class="f-select" id="transfer-to" onchange="onTransferToChange()">
+        <option value="">-- Choose Destination --</option>
+        <option value="office">Office / Floor</option>
+        <option value="storage">Storage Unit</option>
+      </select>
+    </div>
+    <div class="f-section" id="transfer-item-section" style="display:none">
       <label>Select Item</label>
       <select class="f-select" id="transfer-item" onchange="onTransferItemChange()">
         <option value="">-- Choose --</option>
@@ -227,7 +235,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <span id="transfer-qty-display">1</span>
         <button onclick="adjTransferQty(1)">+</button>
       </div>
-      <div class="transfer-arrow" id="transfer-direction">Office → Storage</div>
+      <div class="transfer-arrow" id="transfer-direction"></div>
       <button class="action-btn blue" onclick="executeTransfer()">Transfer</button>
     </div>
   </div>
@@ -418,7 +426,7 @@ let currentUser = null;
 let inventory = {};
 let salesLog = [];
 let sellState = { itemId:null, size:null, qty:1, discount:0 };
-let transferState = { from:null, itemId:null, size:null, qty:1 };
+let transferState = { from:null, to:null, itemId:null, size:null, qty:1 };
 let dbReady = false;
 
 // ============ PASSWORD ============
@@ -668,10 +676,25 @@ function voidSale(key) {
 // ============ TRANSFER ============
 function onTransferFromChange() {
   const from = document.getElementById('transfer-from').value;
-  transferState = { from, itemId:null, size:null, qty:1 };
+  transferState = { from, to:null, itemId:null, size:null, qty:1 };
+  document.getElementById('transfer-to').value = '';
+  if (!from) {
+    hide('transfer-to-section'); hide('transfer-item-section'); hide('transfer-size-section'); hide('transfer-qty-section');
+    return;
+  }
+  show('transfer-to-section');
+  hide('transfer-item-section'); hide('transfer-size-section'); hide('transfer-qty-section');
+}
+
+function onTransferToChange() {
+  const from = document.getElementById('transfer-from').value;
+  const to = document.getElementById('transfer-to').value;
+  transferState.to = to;
+  transferState.itemId = null; transferState.size = null; transferState.qty = 1;
   const sel = document.getElementById('transfer-item');
   sel.innerHTML = '<option value="">-- Choose --</option>';
-  if (!from) { hide('transfer-size-section'); hide('transfer-qty-section'); return; }
+  if (!to) { hide('transfer-item-section'); hide('transfer-size-section'); hide('transfer-qty-section'); return; }
+  if (to === from) { showToast('From and To cannot be the same'); hide('transfer-item-section'); return; }
 
   Object.entries(inventory).filter(([_,i]) => i.location === from).sort((a,b) => a[1].name.localeCompare(b[1].name)).forEach(([id, item]) => {
     const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
@@ -681,6 +704,7 @@ function onTransferFromChange() {
       sel.appendChild(o);
     }
   });
+  show('transfer-item-section');
   hide('transfer-size-section'); hide('transfer-qty-section');
 }
 
@@ -705,8 +729,9 @@ function onTransferItemChange() {
 function selectTransferSize(sz) {
   transferState.size = sz; transferState.qty = 1;
   document.querySelectorAll('#transfer-sizes .size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz===sz));
-  const dest = transferState.from === 'office' ? 'Storage' : 'Office';
-  const src = transferState.from === 'office' ? 'Office' : 'Storage';
+  const locNames = { office:'Office / Floor', storage:'Storage Unit' };
+  const src = locNames[transferState.from] || transferState.from;
+  const dest = locNames[transferState.to] || transferState.to;
   document.getElementById('transfer-direction').textContent = `${src} → ${dest}`;
   document.getElementById('transfer-qty-display').textContent = '1';
   show('transfer-qty-section');
@@ -719,13 +744,13 @@ function adjTransferQty(d) {
 }
 
 function executeTransfer() {
-  const { from, itemId, size, qty } = transferState;
-  if (!itemId || !size) return;
+  const { from, to, itemId, size, qty } = transferState;
+  if (!itemId || !size || !to) return;
   const item = inventory[itemId];
   const avail = (item.sizes||{})[size] || 0;
   if (qty > avail) { showToast('Not enough stock!'); return; }
 
-  const destLoc = from === 'office' ? 'storage' : 'office';
+  const destLoc = to;
 
   // Find matching item in destination, or create one
   let destId = Object.entries(inventory).find(([id, i]) =>
@@ -747,6 +772,7 @@ function executeTransfer() {
   }
 
   // Log the transfer
+  const locNames = { office:'Office / Floor', storage:'Storage Unit' };
   updates['transfers/' + Date.now()] = {
     ts: Date.now(),
     itemName: item.name,
@@ -756,13 +782,14 @@ function executeTransfer() {
   };
 
   db.ref().update(updates);
-  showToast(`Transferred ${qty}x ${item.name} (${size}) → ${destLoc === 'office' ? 'Office' : 'Storage'}`);
+  showToast(`Transferred ${qty}x ${item.name} (${size}) → ${locNames[destLoc] || destLoc}`);
 
   // Reset
   document.getElementById('transfer-from').value = '';
+  document.getElementById('transfer-to').value = '';
   document.getElementById('transfer-item').innerHTML = '<option value="">-- Choose --</option>';
-  hide('transfer-size-section'); hide('transfer-qty-section');
-  transferState = { from:null, itemId:null, size:null, qty:1 };
+  hide('transfer-to-section'); hide('transfer-item-section'); hide('transfer-size-section'); hide('transfer-qty-section');
+  transferState = { from:null, to:null, itemId:null, size:null, qty:1 };
 }
 
 // ============ INVENTORY ============
