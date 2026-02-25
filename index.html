@@ -623,7 +623,7 @@ function recordSale() {
   if (sellState.qty > avail) { showToast('Not enough stock!'); return; }
 
   const price = getSellPrice();
-  const costKey = item.costKey || 'default';
+  const costKey = item.costKey === 'custom' ? 'custom-'+sellState.itemId : (item.costKey || 'default');
   const cost = COST[costKey] || COST.default;
 
   const sale = {
@@ -884,10 +884,11 @@ function renderStats() {
   const topSellers = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
 
   let totalUnits=0, totalRetail=0, totalCostVal=0;
-  Object.values(inventory).forEach(item => {
+  Object.entries(inventory).forEach(([id, item]) => {
     const units = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
     const retail = PRICING[item.type]?.retail || 25;
-    const cost = COST[item.costKey] || COST.default;
+    const ck = item.costKey === 'custom' ? 'custom-'+id : (item.costKey || 'default');
+    const cost = COST[ck] || COST.default;
     totalUnits += units; totalRetail += units*retail; totalCostVal += units*cost;
   });
 
