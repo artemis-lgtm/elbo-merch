@@ -13,25 +13,22 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-/* PASSWORD */
-#password-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:4px; }
-/* LOGIN */
-#login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:20px; }
-#login-screen h1 { font-size:2em; color:var(--accent); letter-spacing:2px; }
-#login-screen .pin-display { font-size:2.5em; letter-spacing:15px; color:var(--accent); min-height:50px; }
-.pin-pad { display:grid; grid-template-columns:repeat(3,80px); gap:10px; }
-.pin-btn { width:80px; height:60px; font-size:1.5em; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; cursor:pointer; }
-.pin-btn:active { background:var(--accent); }
-.pin-btn.clear { font-size:0.9em; color:var(--accent); }
-#login-error { color:var(--accent); min-height:20px; }
+/* SCREENS */
+.gate-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:8px; }
+.gate-screen h1 { font-size:2em; color:var(--accent); letter-spacing:2px; }
+.gate-input { width:220px; padding:12px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:8px; font-size:1.1em; text-align:center; }
+.gate-btn { padding:10px 32px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:1em; cursor:pointer; margin-top:8px; }
+.gate-error { color:var(--accent); min-height:20px; font-size:0.9em; }
+.name-btn { width:180px; padding:14px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:8px; font-size:1.1em; cursor:pointer; }
+.name-btn:active { background:var(--accent); border-color:var(--accent); }
 
 /* NAV */
 #app { display:none; }
 .top-bar { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
 .top-bar h2 { font-size:1em; color:var(--accent); }
-.top-bar .user-badge { color:var(--dim); font-size:0.85em; }
+.top-bar .user-badge { color:var(--dim); font-size:0.85em; cursor:pointer; }
 .tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; }
-.tab { padding:10px 16px; color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; font-size:0.9em; }
+.tab { padding:10px 14px; color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; font-size:0.85em; }
 .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
 /* PANELS */
@@ -49,13 +46,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .size-chip .sz { color:var(--dim); }
 .size-chip .ct { color:var(--text); font-weight:600; }
 .size-chip.zero { opacity:0.3; }
-.location-tag { font-size:0.7em; color:var(--blue); background:rgba(66,165,245,0.15); padding:2px 6px; border-radius:3px; margin-left:6px; }
 
-/* SELL */
-.sell-section { margin-bottom:16px; }
-.sell-section label { display:block; color:var(--dim); font-size:0.85em; margin-bottom:6px; }
-.sell-select, .sell-input { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-bottom:12px; }
-.sell-select option { background:var(--surface); }
+/* FORMS */
+.f-section { margin-bottom:14px; }
+.f-section label { display:block; color:var(--dim); font-size:0.85em; margin-bottom:6px; }
+.f-select, .f-input { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-bottom:8px; }
+.f-select option { background:var(--surface); }
 .size-sell-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
 .size-sell-btn { padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; cursor:pointer; text-align:center; font-size:0.9em; }
 .size-sell-btn.selected { border-color:var(--accent); background:rgba(255,59,59,0.15); color:var(--accent); }
@@ -66,20 +62,27 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .price-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--border); margin-top:8px; }
 .price-row .label { color:var(--dim); }
 .price-row .val { font-weight:600; }
-.discount-row { display:flex; gap:8px; margin:8px 0; }
-.discount-btn { flex:1; padding:8px; background:var(--surface); border:1px solid var(--border); color:var(--dim); border-radius:6px; cursor:pointer; font-size:0.85em; text-align:center; }
-.discount-btn.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,193,7,0.1); }
-.record-btn { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; cursor:pointer; margin-top:12px; }
-.record-btn:disabled { opacity:0.4; cursor:default; }
+.discount-row { display:flex; gap:6px; margin:8px 0; flex-wrap:wrap; }
+.disc-btn { flex:1; min-width:70px; padding:8px; background:var(--surface); border:1px solid var(--border); color:var(--dim); border-radius:6px; cursor:pointer; font-size:0.85em; text-align:center; }
+.disc-btn.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,193,7,0.1); }
+.action-btn { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:1.1em; font-weight:600; cursor:pointer; margin-top:12px; }
+.action-btn:disabled { opacity:0.4; cursor:default; }
+.action-btn.secondary { background:var(--surface); border:1px solid var(--accent); color:var(--accent); }
+.action-btn.blue { background:var(--blue); }
 .custom-price-input { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-top:8px; display:none; }
 
 /* LOG */
-.log-entry { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.log-entry { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+.log-top { display:flex; justify-content:space-between; align-items:center; }
 .log-entry .info { font-size:0.9em; }
 .log-entry .info .item-sold { font-weight:600; }
 .log-entry .info .meta { color:var(--dim); font-size:0.8em; }
 .log-entry .amount { font-weight:600; color:var(--green); }
 .log-entry .amount.discount { color:var(--yellow); }
+.log-entry .amount.voided { color:var(--accent); text-decoration:line-through; }
+.log-entry.voided { opacity:0.5; }
+.void-btn { background:none; border:1px solid var(--accent); color:var(--accent); padding:3px 8px; border-radius:4px; cursor:pointer; font-size:0.75em; margin-top:4px; }
+.void-btn:hover { background:rgba(255,59,59,0.15); }
 .day-total { background:var(--surface2); padding:12px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-around; text-align:center; }
 .day-total .stat-val { font-size:1.3em; font-weight:700; }
 .day-total .stat-label { font-size:0.75em; color:var(--dim); }
@@ -96,73 +99,75 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* SEARCH */
 .search-box { width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1em; margin-bottom:12px; }
 
-/* RESPONSIVE */
+/* TOGGLE BTNS */
+.toggle-row { display:flex; gap:8px; margin-bottom:16px; }
+.toggle-btn { flex:1; padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--dim); border-radius:6px; cursor:pointer; font-size:0.85em; text-align:center; }
+.toggle-btn.active { color:var(--accent); border-color:var(--accent); }
+
+/* TRANSFER */
+.transfer-arrow { text-align:center; font-size:1.5em; color:var(--blue); margin:8px 0; }
+
+/* SYNC INDICATOR */
+.sync-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.sync-dot.online { background:var(--green); }
+.sync-dot.offline { background:var(--accent); }
+
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 20px; border-radius:8px; font-weight:600; z-index:999; display:none; max-width:90%; text-align:center; }
+
 @media(max-width:400px) {
-  .pin-pad { grid-template-columns:repeat(3,70px); }
-  .pin-btn { width:70px; height:55px; }
   .size-sell-grid { grid-template-columns:repeat(3,1fr); }
 }
-
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 20px; border-radius:8px; font-weight:600; z-index:999; display:none; }
-.undo-btn { background:none; border:1px solid #fff; color:#fff; padding:4px 10px; border-radius:4px; margin-left:10px; cursor:pointer; font-size:0.85em; }
 </style>
 </head>
 <body>
 
-<div id="password-screen">
+<!-- PASSWORD GATE -->
+<div class="gate-screen" id="screen-password">
   <h1>ELBO ROOM</h1>
-  <p style="color:var(--dim);margin-bottom:8px">Enter Password</p>
-  <input type="password" id="pw-input" style="width:220px;padding:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:1.1em;text-align:center" placeholder="Password" onkeydown="if(event.key==='Enter')pwSubmit()" />
-  <div style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+  <p style="color:var(--dim)">Enter Password</p>
+  <input type="password" class="gate-input" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')pwSubmit()" />
+  <div style="display:flex;align-items:center;gap:8px;margin:4px 0">
     <input type="checkbox" id="pw-remember" style="accent-color:var(--accent)">
     <label for="pw-remember" style="color:var(--dim);font-size:0.85em">Remember this device</label>
   </div>
-  <button onclick="pwSubmit()" style="margin-top:16px;padding:10px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:1em;cursor:pointer">Enter</button>
-  <div id="pw-error" style="color:var(--accent);min-height:20px;margin-top:8px"></div>
+  <button class="gate-btn" onclick="pwSubmit()">Enter</button>
+  <div class="gate-error" id="pw-error"></div>
 </div>
 
-<div id="login-screen" style="display:none">
+<!-- NAME SELECT -->
+<div class="gate-screen" id="screen-name" style="display:none">
   <h1>ELBO ROOM</h1>
-  <p style="color:var(--dim)">Enter PIN</p>
-  <div class="pin-display" id="pin-display"></div>
-  <div id="login-error"></div>
-  <div class="pin-pad">
-    <button class="pin-btn" onclick="pinPress('1')">1</button>
-    <button class="pin-btn" onclick="pinPress('2')">2</button>
-    <button class="pin-btn" onclick="pinPress('3')">3</button>
-    <button class="pin-btn" onclick="pinPress('4')">4</button>
-    <button class="pin-btn" onclick="pinPress('5')">5</button>
-    <button class="pin-btn" onclick="pinPress('6')">6</button>
-    <button class="pin-btn" onclick="pinPress('7')">7</button>
-    <button class="pin-btn" onclick="pinPress('8')">8</button>
-    <button class="pin-btn" onclick="pinPress('9')">9</button>
-    <button class="pin-btn clear" onclick="pinClear()">CLR</button>
-    <button class="pin-btn" onclick="pinPress('0')">0</button>
-    <button class="pin-btn" onclick="pinSubmit()">OK</button>
-  </div>
+  <p style="color:var(--dim);margin-bottom:12px">Who's working?</p>
+  <button class="name-btn" onclick="selectUser('Austin')">Austin</button>
+  <button class="name-btn" onclick="selectUser('Elyse')">Elyse</button>
+  <button class="name-btn" onclick="selectUser('Adam')">Adam</button>
+  <button class="name-btn" onclick="selectUser('Cass')">Cass</button>
 </div>
 
+<!-- MAIN APP -->
 <div id="app">
   <div class="top-bar">
-    <h2>ELBO MERCH</h2>
-    <span class="user-badge" id="user-badge"></span>
+    <div><span class="sync-dot" id="sync-dot"></span><span style="font-size:1em;color:var(--accent);font-weight:700">ELBO MERCH</span></div>
+    <span class="user-badge" id="user-badge" onclick="switchUser()"></span>
   </div>
   <div class="tabs">
     <div class="tab active" data-tab="sell">Sell</div>
     <div class="tab" data-tab="inventory">Inventory</div>
+    <div class="tab" data-tab="transfer">Transfer</div>
     <div class="tab" data-tab="log">Log</div>
     <div class="tab" data-tab="stats">Stats</div>
     <div class="tab" data-tab="manage">Manage</div>
   </div>
 
+  <!-- SELL -->
   <div class="panel active" id="panel-sell">
-    <div class="sell-section">
+    <div class="f-section">
       <label>Select Item</label>
-      <select class="sell-select" id="sell-item" onchange="onSellItemChange()">
+      <select class="f-select" id="sell-item" onchange="onSellItemChange()">
         <option value="">-- Choose --</option>
       </select>
     </div>
-    <div class="sell-section" id="sell-size-section" style="display:none">
+    <div class="f-section" id="sell-size-section" style="display:none">
       <label>Select Size</label>
       <div class="size-sell-grid" id="sell-sizes"></div>
     </div>
@@ -173,27 +178,61 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <button onclick="adjQty(1)">+</button>
       </div>
       <div class="discount-row">
-        <div class="discount-btn" data-disc="0" onclick="setDiscount(0)">Full Price</div>
-        <div class="discount-btn" data-disc="0.5" onclick="setDiscount(0.5)">50% Off</div>
-        <div class="discount-btn" data-disc="1" onclick="setDiscount(1)">Free</div>
-        <div class="discount-btn" data-disc="custom" onclick="setDiscount('custom')">Custom</div>
+        <div class="disc-btn active" data-disc="0" onclick="setDiscount(0)">Full Price</div>
+        <div class="disc-btn" data-disc="0.5" onclick="setDiscount(0.5)">50% Off</div>
+        <div class="disc-btn" data-disc="1" onclick="setDiscount(1)">Free</div>
+        <div class="disc-btn" data-disc="custom" onclick="setDiscount('custom')">Custom</div>
       </div>
-      <input type="number" class="custom-price-input" id="custom-price" placeholder="Enter custom price" />
+      <input type="number" class="custom-price-input" id="custom-price" placeholder="Enter custom price" oninput="updateSellTotal()" />
       <div class="price-row"><span class="label">Unit Price</span><span class="val" id="unit-price">$0</span></div>
       <div class="price-row"><span class="label">Total</span><span class="val" id="sell-total">$0</span></div>
-      <div class="sell-section" style="margin-top:8px">
+      <div class="f-section" style="margin-top:8px">
         <label>Note (optional)</label>
-        <input type="text" class="sell-input" id="sell-note" placeholder="e.g. staff comp, promo..." style="margin-bottom:0" />
+        <input type="text" class="f-input" id="sell-note" placeholder="e.g. staff comp, promo..." style="margin-bottom:0" />
       </div>
-      <button class="record-btn" id="record-btn" onclick="recordSale()">Record Sale</button>
+      <button class="action-btn" id="record-btn" onclick="recordSale()">Record Sale</button>
     </div>
   </div>
 
+  <!-- INVENTORY -->
   <div class="panel" id="panel-inventory">
     <input type="text" class="search-box" placeholder="Search items..." oninput="filterInventory(this.value)" />
     <div id="inventory-list"></div>
   </div>
 
+  <!-- TRANSFER -->
+  <div class="panel" id="panel-transfer">
+    <p style="color:var(--dim);font-size:0.85em;margin-bottom:16px">Move items between Office and Storage without recording a sale.</p>
+    <div class="f-section">
+      <label>From</label>
+      <select class="f-select" id="transfer-from" onchange="onTransferFromChange()">
+        <option value="">-- Choose Location --</option>
+        <option value="office">Office / Floor</option>
+        <option value="storage">Storage Unit</option>
+      </select>
+    </div>
+    <div class="f-section">
+      <label>Select Item</label>
+      <select class="f-select" id="transfer-item" onchange="onTransferItemChange()">
+        <option value="">-- Choose --</option>
+      </select>
+    </div>
+    <div id="transfer-size-section" style="display:none">
+      <label style="color:var(--dim);font-size:0.85em;margin-bottom:6px;display:block">Select Size</label>
+      <div class="size-sell-grid" id="transfer-sizes"></div>
+    </div>
+    <div id="transfer-qty-section" style="display:none">
+      <div class="sell-qty">
+        <button onclick="adjTransferQty(-1)">-</button>
+        <span id="transfer-qty-display">1</span>
+        <button onclick="adjTransferQty(1)">+</button>
+      </div>
+      <div class="transfer-arrow" id="transfer-direction">Office → Storage</div>
+      <button class="action-btn blue" onclick="executeTransfer()">Transfer</button>
+    </div>
+  </div>
+
+  <!-- LOG -->
   <div class="panel" id="panel-log">
     <div class="day-total" id="day-totals"></div>
     <div class="log-filter" id="log-filter">
@@ -204,108 +243,74 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div id="log-list"></div>
   </div>
 
+  <!-- STATS -->
   <div class="panel" id="panel-stats">
     <div id="stats-content"></div>
   </div>
 
+  <!-- MANAGE -->
   <div class="panel" id="panel-manage">
-    <div class="manage-toggle" style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="discount-btn active" id="mg-btn-add" onclick="showManageSection('add')">Add New Item</button>
-      <button class="discount-btn" id="mg-btn-restock" onclick="showManageSection('restock')">Restock</button>
-      <button class="discount-btn" id="mg-btn-edit" onclick="showManageSection('edit')">Edit Item</button>
+    <div class="toggle-row">
+      <div class="toggle-btn active" id="mg-btn-add" onclick="showManageSection('add')">Add New</div>
+      <div class="toggle-btn" id="mg-btn-restock" onclick="showManageSection('restock')">Restock</div>
+      <div class="toggle-btn" id="mg-btn-edit" onclick="showManageSection('edit')">Edit</div>
     </div>
 
-    <!-- ADD NEW ITEM -->
     <div id="manage-add">
-      <div class="sell-section">
-        <label>Item Name</label>
-        <input type="text" class="sell-input" id="add-name" placeholder="e.g. Neon Pink Tee" />
-      </div>
-      <div class="sell-section">
-        <label>Category</label>
-        <select class="sell-select" id="add-type">
-          <option value="tshirt">T-Shirt ($25)</option>
-          <option value="longsleeve">Long Sleeve ($40)</option>
-          <option value="hoodie">Hoodie ($45)</option>
-          <option value="hat">Hat ($30)</option>
-          <option value="crop">Crop Top ($25)</option>
-          <option value="jersey">Jersey ($25)</option>
+      <div class="f-section"><label>Item Name</label><input type="text" class="f-input" id="add-name" placeholder="e.g. Neon Pink Tee" /></div>
+      <div class="f-section"><label>Category</label>
+        <select class="f-select" id="add-type">
+          <option value="tshirt">T-Shirt ($25)</option><option value="longsleeve">Long Sleeve ($40)</option>
+          <option value="hoodie">Hoodie ($45)</option><option value="hat">Hat ($30)</option>
+          <option value="crop">Crop Top ($25)</option><option value="jersey">Jersey ($25)</option>
         </select>
       </div>
-      <div class="sell-section">
-        <label>Location</label>
-        <select class="sell-select" id="add-location">
-          <option value="office">Office / Floor</option>
-          <option value="storage">Storage Unit</option>
-        </select>
+      <div class="f-section"><label>Location</label>
+        <select class="f-select" id="add-location"><option value="office">Office / Floor</option><option value="storage">Storage Unit</option></select>
       </div>
-      <div class="sell-section">
-        <label>Our Cost ($)</label>
-        <input type="number" class="sell-input" id="add-cost" placeholder="e.g. 10" />
-      </div>
-      <div class="sell-section">
+      <div class="f-section"><label>Our Cost ($)</label><input type="number" class="f-input" id="add-cost" placeholder="e.g. 10" /></div>
+      <div class="f-section">
         <label>Sizes & Quantities</label>
-        <p style="color:var(--dim);font-size:0.8em;margin-bottom:8px">Enter quantity for each size. Leave blank or 0 for sizes you don't have.</p>
-        <div id="add-sizes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        </div>
+        <p style="color:var(--dim);font-size:0.8em;margin-bottom:8px">Enter qty per size. Leave blank for sizes you don't carry.</p>
+        <div id="add-sizes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
         <div style="margin-top:8px">
-          <input type="checkbox" id="add-onesize" style="accent-color:var(--accent)" onchange="toggleOneSize()">
-          <label for="add-onesize" style="color:var(--dim);font-size:0.85em">One Size (hats, etc.)</label>
+          <input type="checkbox" id="add-onesize" style="accent-color:var(--accent)" onchange="renderAddSizes()">
+          <label for="add-onesize" style="color:var(--dim);font-size:0.85em">One Size (hats)</label>
         </div>
       </div>
-      <button class="record-btn" onclick="addNewItem()">Add Item</button>
+      <button class="action-btn" onclick="addNewItem()">Add Item</button>
     </div>
 
-    <!-- RESTOCK -->
     <div id="manage-restock" style="display:none">
-      <div class="sell-section">
-        <label>Select Item to Restock</label>
-        <select class="sell-select" id="restock-item" onchange="onRestockItemChange()">
-          <option value="">-- Choose --</option>
-        </select>
+      <div class="f-section"><label>Select Item to Restock</label>
+        <select class="f-select" id="restock-item" onchange="onRestockItemChange()"><option value="">-- Choose --</option></select>
       </div>
       <div id="restock-sizes" style="display:none">
-        <div class="sell-section">
-          <label>Add quantities per size</label>
+        <div class="f-section"><label>Add quantities per size</label>
           <div id="restock-sizes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
         </div>
-        <button class="record-btn" onclick="restockItem()">Restock</button>
+        <button class="action-btn" onclick="restockItem()">Restock</button>
       </div>
     </div>
 
-    <!-- EDIT ITEM -->
     <div id="manage-edit" style="display:none">
-      <div class="sell-section">
-        <label>Select Item to Edit</label>
-        <select class="sell-select" id="edit-item" onchange="onEditItemChange()">
-          <option value="">-- Choose --</option>
-        </select>
+      <div class="f-section"><label>Select Item to Edit</label>
+        <select class="f-select" id="edit-item" onchange="onEditItemChange()"><option value="">-- Choose --</option></select>
       </div>
       <div id="edit-fields" style="display:none">
-        <div class="sell-section">
-          <label>Item Name</label>
-          <input type="text" class="sell-input" id="edit-name" />
-        </div>
-        <div class="sell-section">
-          <label>Category</label>
-          <select class="sell-select" id="edit-type">
-            <option value="tshirt">T-Shirt ($25)</option>
-            <option value="longsleeve">Long Sleeve ($40)</option>
-            <option value="hoodie">Hoodie ($45)</option>
-            <option value="hat">Hat ($30)</option>
-            <option value="crop">Crop Top ($25)</option>
-            <option value="jersey">Jersey ($25)</option>
+        <div class="f-section"><label>Item Name</label><input type="text" class="f-input" id="edit-name" /></div>
+        <div class="f-section"><label>Category</label>
+          <select class="f-select" id="edit-type">
+            <option value="tshirt">T-Shirt ($25)</option><option value="longsleeve">Long Sleeve ($40)</option>
+            <option value="hoodie">Hoodie ($45)</option><option value="hat">Hat ($30)</option>
+            <option value="crop">Crop Top ($25)</option><option value="jersey">Jersey ($25)</option>
           </select>
         </div>
-        <div class="sell-section">
-          <label>Location</label>
-          <select class="sell-select" id="edit-location">
-            <option value="office">Office / Floor</option>
-            <option value="storage">Storage Unit</option>
-          </select>
+        <div class="f-section"><label>Location</label>
+          <select class="f-select" id="edit-location"><option value="office">Office / Floor</option><option value="storage">Storage Unit</option></select>
         </div>
-        <button class="record-btn" onclick="saveEditItem()">Save Changes</button>
-        <button class="record-btn" style="background:var(--surface);border:1px solid var(--accent);color:var(--accent);margin-top:8px" onclick="deleteItem()">Delete Item</button>
+        <button class="action-btn" onclick="saveEditItem()">Save Changes</button>
+        <button class="action-btn secondary" style="margin-top:8px" onclick="deleteItem()">Delete Item</button>
       </div>
     </div>
   </div>
@@ -313,114 +318,110 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 <div class="toast" id="toast"></div>
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
-// ============ DATA ============
-const USERS = {
-  '1111': 'Austin',
-  '2222': 'Elyse',
-  '3333': 'Adam',
-  '4444': 'Cass'
-};
+// ============ FIREBASE INIT ============
+firebase.initializeApp({
+  apiKey: "AIzaSyDjxmmvJXcsnLjQ2j3zaypLV-W2bpOsxU",
+  authDomain: "elbo-merch.firebaseapp.com",
+  databaseURL: "https://elbo-merch-default-rtdb.firebaseio.com",
+  projectId: "elbo-merch",
+  storageBucket: "elbo-merch.firebasestorage.app",
+  messagingSenderId: "288648973262",
+  appId: "1:288648973262:web:213e825e55b62da33f399f"
+});
+const db = firebase.database();
 
+// ============ PRICING ============
 const PRICING = {
-  'tshirt': { retail: 25, category: 'T-Shirts' },
-  'longsleeve': { retail: 40, category: 'Long Sleeves' },
-  'hoodie': { retail: 45, category: 'Hoodies' },
-  'hat': { retail: 30, category: 'Hats' },
-  'crop': { retail: 25, category: 'Crop Tops' },
-  'jersey': { retail: 25, category: 'Jerseys' },
+  tshirt: { retail: 25, category: 'T-Shirts' },
+  longsleeve: { retail: 40, category: 'Long Sleeves' },
+  hoodie: { retail: 45, category: 'Hoodies' },
+  hat: { retail: 30, category: 'Hats' },
+  crop: { retail: 25, category: 'Crop Tops' },
+  jersey: { retail: 25, category: 'Jerseys' },
+};
+const COST = { neon:10, camo:16, hat:12, hoodie:17, default:12 };
+
+// ============ INITIAL INVENTORY ============
+const INIT_INVENTORY = {
+  'stpatrick-green': { name:"St. Patrick's Day Green Tee", type:'tshirt', location:'office', sizes:{S:13,M:16,L:1,XL:11,XXL:6} },
+  'black-neon': { name:'Black Neon Tee', type:'tshirt', location:'office', costKey:'neon', sizes:{S:250,XL:75,XXL:120,XXXL:51} },
+  'blue-pink': { name:'Blue (Pink Logo) Tee', type:'tshirt', location:'office', sizes:{S:2,L:1,XL:24,XXL:14,XXXL:25} },
+  'teal-fishing': { name:'Teal Fishing Shirt', type:'tshirt', location:'office', sizes:{XS:4,S:5,L:1,XL:58,XXL:3,XXXL:4} },
+  'blue-fishing': { name:'Blue Fishing Shirt', type:'tshirt', location:'office', sizes:{S:20,M:12,XL:12,XXL:2,XXXL:1} },
+  'grey-fishing': { name:'Grey Fishing Shirt', type:'tshirt', location:'office', sizes:{XS:6,S:10,M:22,L:3,XL:6,XXXL:4} },
+  'tkachuk-red': { name:'Tkachuk Red Tee', type:'tshirt', location:'office', sizes:{S:60,M:19,L:12,XL:12,XXL:23} },
+  'black-old-logo': { name:'Black (Old Logo) Tee [DISCONTINUED]', type:'tshirt', location:'office', sizes:{S:20,L:1} },
+  'rwb-tee': { name:'Red, White, Blue Tee', type:'tshirt', location:'office', sizes:{S:19,M:33,XL:7,XXL:1} },
+  'wbr-90s': { name:"White, Black & Red 90's Logo Tee", type:'tshirt', location:'office', sizes:{S:11,XXXL:2} },
+  'green-longsleeve': { name:'New Green Long Sleeve', type:'longsleeve', location:'office', sizes:{M:16,L:12,XXL:18,XXXL:3} },
+  'coral-ls-comfort': { name:'Comfort Color LS Coral', type:'longsleeve', location:'office', sizes:{S:2,XXL:8} },
+  'seafoam-ls-comfort': { name:'Comfort Color LS Seafoam', type:'longsleeve', location:'office', sizes:{XXL:6} },
+  'teal-crop': { name:'Teal Ladies Crop Top', type:'crop', location:'office', sizes:{S:10,M:16,L:15,XL:27} },
+  'light-blue-crop': { name:'Light Blue Crop', type:'crop', location:'office', sizes:{M:24,L:12,XL:8} },
+  'light-green-crop': { name:'Light Green Crop', type:'crop', location:'office', sizes:{M:6,L:15,XL:15} },
+  'coral-crop': { name:'Coral Crop', type:'crop', location:'office', sizes:{M:7,L:16,XL:20} },
+  'mermaid-black-crop': { name:'Mermaid Black Crop', type:'crop', location:'office', sizes:{S:2,M:10,L:14,XL:9,XXL:2} },
+  'mermaid-white-crop': { name:'Mermaid White Crop', type:'crop', location:'office', sizes:{S:9,M:1,L:3,XL:4,XXL:1} },
+  'diamond-green-crop': { name:'Diamond Crop Green', type:'crop', location:'office', sizes:{M:6,L:15,XL:15} },
+  'diamond-coral-crop': { name:'Diamond Crop Coral', type:'crop', location:'office', sizes:{M:7,L:16,XL:20} },
+  'diamond-blue-crop': { name:'Diamond Crop Blue', type:'crop', location:'office', sizes:{M:24,L:12,XL:8} },
+  'diamond-black-crop': { name:'Diamond Crop Black', type:'crop', location:'office', sizes:{M:3,L:9,XL:17} },
+  'black-neon-hoodie': { name:'Black Neon Hoodie', type:'hoodie', location:'office', costKey:'hoodie', sizes:{S:10,M:20,XXL:6} },
+  'tan-hoodie': { name:'Tan Hoodie', type:'hoodie', location:'office', costKey:'hoodie', sizes:{S:28,M:15,L:11} },
+  'white-zip-old': { name:'White Zip Up Hoodie (Old)', type:'hoodie', location:'office', costKey:'hoodie', sizes:{XS:1,M:6,L:17} },
+  'red-zip-old': { name:'Red Zip Hoodie (Old)', type:'hoodie', location:'office', costKey:'hoodie', sizes:{L:13,XXXXL:2} },
+  'red-panthers-hoodie': { name:'Red Elbo/Panthers Jersey Hoodie', type:'hoodie', location:'office', costKey:'hoodie', sizes:{M:1,XL:1,XXL:1,XXXL:2} },
+  'blue-zip-old': { name:'Blue Zip Old Logo Hoodie', type:'hoodie', location:'office', costKey:'hoodie', sizes:{XS:4,XXXXL:3} },
+  'bills-jersey': { name:'Bills/Elbo Room Jersey', type:'jersey', location:'office', sizes:{S:72,M:72,XXL:28} },
+  'hat-camo': { name:'Camo Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:187} },
+  'hat-yellow-palm': { name:'Yellow Palm Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:175} },
+  'hat-blue-palm': { name:'Blue Palm Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:196} },
+  'hat-usd-black': { name:'Upside Down Logo Black Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:188} },
+  'hat-usd-white': { name:'Upside Down Logo White Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:254} },
+  'hat-rwb': { name:'Red White Blue Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:94} },
+  'hat-suede': { name:'Elbo Suede Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:7} },
+  'hat-blue-red-patch': { name:'Blue w/ Red Elbo Patch Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:56} },
+  'hat-black-bold': { name:'Black & Off White Bold ElboRoom Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:21} },
+  'hat-black-camo': { name:'Black & White w/ Camo Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:77} },
+  'hat-drink-burgundy': { name:'Drinking Club Burgundy Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:0} },
+  'hat-drink-green': { name:'Drinking Club Green Hat', type:'hat', location:'office', costKey:'hat', sizes:{OS:30} },
+  // STORAGE
+  'sto-hat-drink-burgundy': { name:'Drinking Club Burgundy Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:0} },
+  'sto-hat-drink-green': { name:'Drinking Club Green Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:10} },
+  'sto-hat-black-camo': { name:'Black, White & Camo Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:143} },
+  'sto-hat-rw': { name:'Red, White Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:45} },
+  'sto-hat-blue-red-patch': { name:'Blue w/ Red Elbo Patch Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:148} },
+  'sto-hat-black-bold': { name:'Black w/ Bold ElboRoom Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:198} },
+  'sto-hat-yellow-palm': { name:'Yellow Palm Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:220} },
+  'sto-hat-blue-palm': { name:'Blue Palm Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:211} },
+  'sto-hat-camo': { name:'Camo Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:216} },
+  'sto-hat-suede': { name:'Elbo Suede Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:1310} },
+  'sto-hat-usd-black': { name:'Upside Down Logo Black Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:490} },
+  'sto-hat-usd-white': { name:'Upside Down Logo White Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:497} },
+  'sto-camo-tee': { name:'Camo Tee', type:'tshirt', location:'storage', costKey:'camo', sizes:{S:29} },
+  'sto-lightgreen-tee': { name:'Light Green Tee', type:'tshirt', location:'storage', sizes:{S:30,M:36,L:12,XL:12,XXL:48,XXXL:12} },
+  'sto-neon-tee': { name:'Neon Tee', type:'tshirt', location:'storage', costKey:'neon', sizes:{S:6,M:50,L:57,XL:75,XXL:109} },
+  'sto-tkachuk-tee': { name:'Red Tkachuk Tee', type:'tshirt', location:'storage', sizes:{S:8,M:3,XXL:12,XXXL:10} },
+  'sto-bills-jersey': { name:'Bills/Elbo Jersey', type:'jersey', location:'storage', sizes:{XXL:47} },
+  'sto-panthers-hoodie': { name:'Elbo/Panthers Hoodie', type:'hoodie', location:'storage', costKey:'hoodie', sizes:{M:9,L:10,XL:7,XXL:73} },
+  'sto-tan-hoodie': { name:'Tan Hoodie', type:'hoodie', location:'storage', costKey:'hoodie', sizes:{S:43,M:26,XL:6} },
+  'sto-neon-hoodie': { name:'Neon Hoodie', type:'hoodie', location:'storage', costKey:'hoodie', sizes:{S:6,M:25,XL:4,XXL:77} },
 };
 
-const COST = {
-  'neon': 10, 'camo': 16, 'hat': 12, 'hoodie': 17, 'default': 12
-};
+// ============ STATE ============
+let currentUser = null;
+let inventory = {};
+let salesLog = [];
+let sellState = { itemId:null, size:null, qty:1, discount:0 };
+let transferState = { from:null, itemId:null, size:null, qty:1 };
+let dbReady = false;
 
-// Full inventory from Austin's email (Feb 25, 2026)
-const INIT_INVENTORY = [
-  // ---- T-SHIRTS (Office/Floor) ----
-  { id: 'stpatrick-green', name: "St. Patrick's Day Green Tee", type: 'tshirt', location: 'office', sizes: {S:13,M:16,L:1,XL:11,XXL:6} },
-  { id: 'black-neon', name: 'Black Neon Tee', type: 'tshirt', location: 'office', costKey:'neon', sizes: {S:250,M:0,L:0,XL:75,XXL:120,XXXL:51} },
-  { id: 'blue-pink', name: 'Blue (Pink Logo) Tee', type: 'tshirt', location: 'office', sizes: {S:2,M:0,L:1,XL:24,XXL:14,XXXL:25} },
-  { id: 'teal-fishing', name: 'Teal Fishing Shirt', type: 'tshirt', location: 'office', sizes: {XS:4,S:5,M:0,L:1,XL:58,XXL:3,XXXL:4} },
-  { id: 'blue-fishing', name: 'Blue Fishing Shirt', type: 'tshirt', location: 'office', sizes: {S:20,M:12,L:0,XL:12,XXL:2,XXXL:1} },
-  { id: 'grey-fishing', name: 'Grey Fishing Shirt', type: 'tshirt', location: 'office', sizes: {XS:6,S:10,M:22,L:3,XL:6,XXL:0,XXXL:4} },
-  { id: 'tkachuk-red', name: 'Tkachuk Red Tee', type: 'tshirt', location: 'office', sizes: {S:60,M:19,L:12,XL:12,XXL:23} },
-  { id: 'black-old-logo', name: 'Black (Old Logo) Tee [DISCONTINUED]', type: 'tshirt', location: 'office', sizes: {S:20,M:0,L:1} },
-  { id: 'rwb-tee', name: 'Red, White, Blue Tee', type: 'tshirt', location: 'office', sizes: {S:19,M:33,L:0,XL:7,XXL:1} },
-
-  // ---- LONG SLEEVES (Office) ----
-  { id: 'green-longsleeve', name: 'New Green Long Sleeve', type: 'longsleeve', location: 'office', sizes: {M:16,L:12,XXL:18,XXXL:3} },
-  { id: 'coral-ls-comfort', name: 'Comfort Color LS Coral', type: 'longsleeve', location: 'office', sizes: {S:2,XXL:8} },
-  { id: 'seafoam-ls-comfort', name: 'Comfort Color LS Seafoam', type: 'longsleeve', location: 'office', sizes: {XXL:6} },
-
-  // ---- CROP TOPS (Office) ----
-  { id: 'teal-crop', name: 'Teal Ladies Crop Top', type: 'crop', location: 'office', sizes: {S:10,M:16,L:15,XL:27} },
-  { id: 'light-blue-crop', name: 'Light Blue Crop', type: 'crop', location: 'office', sizes: {M:24,L:12,XL:8} },
-  { id: 'light-green-crop', name: 'Light Green Crop', type: 'crop', location: 'office', sizes: {M:6,L:15,XL:15} },
-  { id: 'coral-crop', name: 'Coral Crop', type: 'crop', location: 'office', sizes: {M:7,L:16,XL:20} },
-  { id: 'mermaid-black-crop', name: 'Mermaid Black Crop', type: 'crop', location: 'office', sizes: {S:2,M:10,L:14,XL:9,XXL:2} },
-  { id: 'mermaid-white-crop', name: 'Mermaid White Crop', type: 'crop', location: 'office', sizes: {S:9,M:1,L:3,XL:4,XXL:1} },
-  { id: 'diamond-green-crop', name: 'Diamond Crop Green', type: 'crop', location: 'office', sizes: {M:6,L:15,XL:15} },
-  { id: 'diamond-coral-crop', name: 'Diamond Crop Coral', type: 'crop', location: 'office', sizes: {M:7,L:16,XL:20} },
-  { id: 'diamond-blue-crop', name: 'Diamond Crop Blue', type: 'crop', location: 'office', sizes: {M:24,L:12,XL:8} },
-  { id: 'diamond-black-crop', name: 'Diamond Crop Black', type: 'crop', location: 'office', sizes: {M:3,L:9,XL:17} },
-
-  // ---- HOODIES (Office) ----
-  { id: 'black-neon-hoodie', name: 'Black Neon Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {S:10,M:20,XXL:6} },
-  { id: 'tan-hoodie', name: 'Tan Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {S:28,M:15,L:11} },
-  { id: 'white-zip-old', name: 'White Zip Up Hoodie (Old)', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {XS:1,M:6,L:17} },
-  { id: 'red-zip-old', name: 'Red Zip Hoodie (Old)', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {L:13,XXXXL:2} },
-  { id: 'red-panthers-hoodie', name: 'Red Elbo/Panthers Jersey Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {M:1,XL:1,XXL:1,XXXL:2} },
-
-  // ---- JERSEYS (Office) ----
-  { id: 'bills-jersey', name: 'Bills/Elbo Room Jersey', type: 'jersey', location: 'office', sizes: {S:72,M:72,XXL:28} },
-
-  // ---- HATS (Office) ----
-  { id: 'hat-camo', name: 'Camo Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':187} },
-  { id: 'hat-yellow-palm', name: 'Yellow Palm Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':175} },
-  { id: 'hat-blue-palm', name: 'Blue Palm Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':196} },
-  { id: 'hat-usd-black', name: 'Upside Down Logo Black Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':188} },
-  { id: 'hat-usd-white', name: 'Upside Down Logo White Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':254} },
-  { id: 'hat-rwb', name: 'Red White Blue Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':94} },
-  { id: 'hat-suede', name: 'Elbo Suede Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':7} },
-  { id: 'hat-blue-red-patch', name: 'Blue w/ Red Elbo Patch Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':56} },
-  { id: 'hat-black-bold', name: 'Black & Off White Bold ElboRoom Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':21} },
-  { id: 'hat-black-camo', name: 'Black & White w/ Camo Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':77} },
-  { id: 'hat-drink-burgundy', name: 'Drinking Club Burgundy Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':0} },
-  { id: 'hat-drink-green', name: 'Drinking Club Green Hat', type: 'hat', location: 'office', costKey:'hat', sizes: {'OS':30} },
-  // White, Black & Red 90's logo
-  { id: 'wbr-90s', name: "White, Black & Red 90's Logo Tee", type: 'tshirt', location: 'office', sizes: {S:11,XXXL:2} },
-  // Blue Zip old logo
-  { id: 'blue-zip-old', name: 'Blue Zip Old Logo Hoodie', type: 'hoodie', location: 'office', costKey:'hoodie', sizes: {XS:4,XXXXL:3} },
-
-  // ============ STORAGE UNIT ============
-  // Hats
-  { id: 'sto-hat-drink-burgundy', name: 'Drinking Club Burgundy Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':0} },
-  { id: 'sto-hat-drink-green', name: 'Drinking Club Green Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':10} },
-  { id: 'sto-hat-black-camo', name: 'Black, White & Camo Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':143} },
-  { id: 'sto-hat-rw', name: 'Red, White Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':45} },
-  { id: 'sto-hat-blue-red-patch', name: 'Blue w/ Red Elbo Patch Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':148} },
-  { id: 'sto-hat-black-bold', name: 'Black w/ Bold ElboRoom Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':198} },
-  { id: 'sto-hat-yellow-palm', name: 'Yellow Palm Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':220} },
-  { id: 'sto-hat-blue-palm', name: 'Blue Palm Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':211} },
-  { id: 'sto-hat-camo', name: 'Camo Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':216} },
-  { id: 'sto-hat-suede', name: 'Elbo Suede Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':1310} },
-  { id: 'sto-hat-usd-black', name: 'Upside Down Logo Black Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':490} },
-  { id: 'sto-hat-usd-white', name: 'Upside Down Logo White Hat', type: 'hat', location: 'storage', costKey:'hat', sizes: {'OS':497} },
-  // Shirts
-  { id: 'sto-camo-tee', name: 'Camo Tee', type: 'tshirt', location: 'storage', costKey:'camo', sizes: {S:29} },
-  { id: 'sto-lightgreen-tee', name: 'Light Green Tee', type: 'tshirt', location: 'storage', sizes: {S:30,M:36,L:12,XL:12,XXL:48,XXXL:12} },
-  { id: 'sto-neon-tee', name: 'Neon Tee', type: 'tshirt', location: 'storage', costKey:'neon', sizes: {S:6,M:50,L:57,XL:75,XXL:109} },
-  { id: 'sto-tkachuk-tee', name: 'Red Tkachuk Tee', type: 'tshirt', location: 'storage', sizes: {S:8,M:3,XXL:12,XXXL:10} },
-  // Jerseys
-  { id: 'sto-bills-jersey', name: 'Bills/Elbo Jersey', type: 'jersey', location: 'storage', sizes: {XXL:47} },
-  // Hoodies
-  { id: 'sto-panthers-hoodie', name: 'Elbo/Panthers Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {M:9,L:10,XL:7,XXL:73} },
-  { id: 'sto-tan-hoodie', name: 'Tan Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {S:43,M:26,XL:6} },
-  { id: 'sto-neon-hoodie', name: 'Neon Hoodie', type: 'hoodie', location: 'storage', costKey:'hoodie', sizes: {S:6,M:25,XL:4,XXL:77} },
-];
-
-// ============ PASSWORD GATE ============
+// ============ PASSWORD ============
 const PW_HASH = 'e7538fe100cdd27b801a796e5c4603b344c8a1c293e2446511c144c399a369d8';
 
 async function sha256(str) {
@@ -429,72 +430,78 @@ async function sha256(str) {
 }
 
 async function pwSubmit() {
-  const pw = document.getElementById('pw-input').value;
-  const hash = await sha256(pw);
+  const hash = await sha256(document.getElementById('pw-input').value);
   if (hash === PW_HASH) {
-    if (document.getElementById('pw-remember').checked) {
-      localStorage.setItem('elbo-pw-ok', hash);
-    }
-    document.getElementById('password-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    if (document.getElementById('pw-remember').checked) localStorage.setItem('elbo-pw-ok', hash);
+    document.getElementById('screen-password').style.display = 'none';
+    document.getElementById('screen-name').style.display = 'flex';
   } else {
     document.getElementById('pw-error').textContent = 'Wrong password';
     document.getElementById('pw-input').value = '';
   }
 }
 
-// Check remembered device
+function selectUser(name) {
+  currentUser = name;
+  localStorage.setItem('elbo-user', name);
+  document.getElementById('screen-name').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-badge').textContent = name + ' ▾';
+  bootApp();
+}
+
+function switchUser() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('screen-name').style.display = 'flex';
+}
+
+// Auto-login
 if (localStorage.getItem('elbo-pw-ok') === PW_HASH) {
-  document.getElementById('password-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-}
-
-// ============ STATE ============
-let currentUser = null;
-let pin = '';
-let inventory = {};
-let salesLog = [];
-let sellState = { itemId: null, size: null, qty: 1, discount: 0 };
-
-function init() {
-  const saved = localStorage.getItem('elbo-inventory');
-  if (saved) {
-    inventory = JSON.parse(saved);
-  } else {
-    // Build from initial data
-    INIT_INVENTORY.forEach(item => {
-      inventory[item.id] = { ...item, sizes: { ...item.sizes } };
-    });
-    saveInventory();
-  }
-  salesLog = JSON.parse(localStorage.getItem('elbo-sales') || '[]');
-}
-
-function saveInventory() { localStorage.setItem('elbo-inventory', JSON.stringify(inventory)); }
-function saveSales() { localStorage.setItem('elbo-sales', JSON.stringify(salesLog)); }
-
-// ============ LOGIN ============
-function pinPress(n) {
-  if (pin.length < 4) { pin += n; updatePinDisplay(); }
-  if (pin.length === 4) setTimeout(pinSubmit, 150);
-}
-function pinClear() { pin = ''; updatePinDisplay(); document.getElementById('login-error').textContent = ''; }
-function updatePinDisplay() { document.getElementById('pin-display').textContent = '•'.repeat(pin.length); }
-function pinSubmit() {
-  if (USERS[pin]) {
-    currentUser = USERS[pin];
-    document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('screen-password').style.display = 'none';
+  const savedUser = localStorage.getItem('elbo-user');
+  if (savedUser) {
+    document.getElementById('screen-name').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    document.getElementById('user-badge').textContent = currentUser;
-    populateSellDropdown();
-    renderInventory();
+    currentUser = savedUser;
+    document.getElementById('user-badge').textContent = savedUser + ' ▾';
+    bootApp();
+  } else {
+    document.getElementById('screen-name').style.display = 'flex';
+  }
+}
+
+// ============ FIREBASE SYNC ============
+function bootApp() {
+  if (dbReady) return;
+  dbReady = true;
+
+  // Sync indicator
+  const dot = document.getElementById('sync-dot');
+  db.ref('.info/connected').on('value', snap => {
+    dot.className = 'sync-dot ' + (snap.val() ? 'online' : 'offline');
+  });
+
+  // Check if inventory exists in Firebase
+  db.ref('inventory').once('value', snap => {
+    if (!snap.exists()) {
+      // First run: seed with initial inventory
+      db.ref('inventory').set(INIT_INVENTORY);
+    }
+  });
+
+  // Listen for inventory changes (real-time)
+  db.ref('inventory').on('value', snap => {
+    inventory = snap.val() || {};
+    renderAll();
+  });
+
+  // Listen for sales changes (real-time)
+  db.ref('sales').on('value', snap => {
+    const data = snap.val() || {};
+    salesLog = Object.entries(data).map(([k,v]) => ({...v, _key:k})).sort((a,b) => b.ts - a.ts);
     renderLog();
     renderStats();
-  } else {
-    document.getElementById('login-error').textContent = 'Invalid PIN';
-    pin = '';
-    updatePinDisplay();
-  }
+  });
 }
 
 // ============ TABS ============
@@ -507,17 +514,25 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
+// ============ RENDER ALL ============
+function renderAll() {
+  populateSellDropdown();
+  renderInventory();
+  renderStats();
+}
+
 // ============ SELL ============
 function populateSellDropdown() {
   const sel = document.getElementById('sell-item');
+  const prev = sel.value;
   sel.innerHTML = '<option value="">-- Choose Item --</option>';
   const grouped = {};
-  Object.values(inventory).forEach(item => {
+  Object.entries(inventory).forEach(([id, item]) => {
     const cat = PRICING[item.type]?.category || 'Other';
     const loc = item.location === 'storage' ? ' [Storage]' : '';
     if (!grouped[cat]) grouped[cat] = [];
-    const total = Object.values(item.sizes).reduce((a,b) => a+b, 0);
-    if (total > 0) grouped[cat].push({ id: item.id, name: item.name + loc, total });
+    const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
+    if (total > 0) grouped[cat].push({ id, name: item.name + loc, total });
   });
   Object.keys(grouped).sort().forEach(cat => {
     const og = document.createElement('optgroup');
@@ -530,132 +545,224 @@ function populateSellDropdown() {
     });
     sel.appendChild(og);
   });
+  if (prev) sel.value = prev;
 }
 
 function onSellItemChange() {
   const id = document.getElementById('sell-item').value;
-  sellState = { itemId: id, size: null, qty: 1, discount: 0 };
-  if (!id) {
-    document.getElementById('sell-size-section').style.display = 'none';
-    document.getElementById('sell-details').style.display = 'none';
-    return;
-  }
+  sellState = { itemId:id, size:null, qty:1, discount:0 };
+  if (!id) { hide('sell-size-section'); hide('sell-details'); return; }
   const item = inventory[id];
   const grid = document.getElementById('sell-sizes');
   grid.innerHTML = '';
-  Object.entries(item.sizes).forEach(([sz, ct]) => {
+  Object.entries(item.sizes||{}).forEach(([sz, ct]) => {
     const btn = document.createElement('div');
-    btn.className = 'size-sell-btn' + (ct === 0 ? ' zero' : '');
+    btn.className = 'size-sell-btn' + (ct===0?' zero':'');
     btn.innerHTML = `${sz}<span class="avail">${ct} left</span>`;
-    if (ct > 0) btn.onclick = () => selectSize(sz);
+    if (ct > 0) btn.onclick = () => selectSellSize(sz);
     btn.dataset.sz = sz;
     grid.appendChild(btn);
   });
-  document.getElementById('sell-size-section').style.display = 'block';
-  document.getElementById('sell-details').style.display = 'none';
+  show('sell-size-section'); hide('sell-details');
 }
 
-function selectSize(sz) {
-  sellState.size = sz;
-  sellState.qty = 1;
-  sellState.discount = 0;
-  document.querySelectorAll('.size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz === sz));
-  document.querySelectorAll('.discount-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.discount-btn[data-disc="0"]').classList.add('active');
+function selectSellSize(sz) {
+  sellState.size = sz; sellState.qty = 1; sellState.discount = 0;
+  document.querySelectorAll('#sell-sizes .size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz===sz));
+  document.querySelectorAll('.disc-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.disc-btn[data-disc="0"]').classList.add('active');
   document.getElementById('custom-price').style.display = 'none';
-  document.getElementById('sell-details').style.display = 'block';
-  updateSellTotal();
+  show('sell-details'); updateSellTotal();
 }
 
 function adjQty(d) {
-  const item = inventory[sellState.itemId];
-  const max = item.sizes[sellState.size] || 0;
+  const max = (inventory[sellState.itemId]?.sizes||{})[sellState.size] || 0;
   sellState.qty = Math.max(1, Math.min(max, sellState.qty + d));
   updateSellTotal();
 }
 
 function setDiscount(d) {
   sellState.discount = d;
-  document.querySelectorAll('.discount-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.disc-btn').forEach(b => b.classList.remove('active'));
   if (d === 'custom') {
-    document.querySelector('.discount-btn[data-disc="custom"]').classList.add('active');
+    document.querySelector('.disc-btn[data-disc="custom"]').classList.add('active');
     document.getElementById('custom-price').style.display = 'block';
     document.getElementById('custom-price').focus();
-    document.getElementById('custom-price').oninput = updateSellTotal;
   } else {
-    document.querySelector(`.discount-btn[data-disc="${d}"]`).classList.add('active');
+    document.querySelector(`.disc-btn[data-disc="${d}"]`).classList.add('active');
     document.getElementById('custom-price').style.display = 'none';
   }
   updateSellTotal();
 }
 
-function getRetail() {
-  const item = inventory[sellState.itemId];
-  return PRICING[item.type]?.retail || 25;
-}
-
 function getSellPrice() {
-  if (sellState.discount === 'custom') {
-    return parseFloat(document.getElementById('custom-price').value) || 0;
-  }
-  return getRetail() * (1 - sellState.discount);
+  if (sellState.discount === 'custom') return parseFloat(document.getElementById('custom-price').value) || 0;
+  const retail = PRICING[inventory[sellState.itemId]?.type]?.retail || 25;
+  return retail * (1 - sellState.discount);
 }
 
 function updateSellTotal() {
-  const price = getSellPrice();
+  const p = getSellPrice();
   document.getElementById('sell-qty-display').textContent = sellState.qty;
-  document.getElementById('unit-price').textContent = '$' + price.toFixed(0);
-  document.getElementById('sell-total').textContent = '$' + (price * sellState.qty).toFixed(0);
-  document.getElementById('record-btn').disabled = !sellState.size;
+  document.getElementById('unit-price').textContent = '$' + p.toFixed(0);
+  document.getElementById('sell-total').textContent = '$' + (p * sellState.qty).toFixed(0);
 }
 
 function recordSale() {
   const item = inventory[sellState.itemId];
   if (!item || !sellState.size) return;
-  const avail = item.sizes[sellState.size] || 0;
+  const avail = (item.sizes||{})[sellState.size] || 0;
   if (sellState.qty > avail) { showToast('Not enough stock!'); return; }
 
   const price = getSellPrice();
-  const total = price * sellState.qty;
   const costKey = item.costKey || 'default';
   const cost = COST[costKey] || COST.default;
 
   const sale = {
-    id: Date.now(),
-    ts: new Date().toISOString(),
-    itemId: item.id,
+    ts: Date.now(),
+    itemId: sellState.itemId,
     itemName: item.name,
     type: item.type,
     location: item.location,
     size: sellState.size,
     qty: sellState.qty,
     unitPrice: price,
-    total: total,
+    total: price * sellState.qty,
     cost: cost * sellState.qty,
     discount: sellState.discount === 'custom' ? 'custom' : (sellState.discount * 100) + '%',
     note: document.getElementById('sell-note').value.trim(),
     user: currentUser,
+    voided: false
   };
 
-  // Update inventory
-  item.sizes[sellState.size] -= sellState.qty;
-  saveInventory();
+  // Update Firebase
+  const newQty = avail - sellState.qty;
+  db.ref(`inventory/${sellState.itemId}/sizes/${sellState.size}`).set(newQty);
+  db.ref('sales').push(sale);
 
-  salesLog.unshift(sale);
-  saveSales();
-
-  showToast(`Sold ${sellState.qty}x ${item.name} (${sellState.size}) - $${total}`, sale.id);
+  showToast(`Sold ${sellState.qty}x ${item.name} (${sellState.size}) - $${sale.total}`);
 
   // Reset
   document.getElementById('sell-item').value = '';
-  document.getElementById('sell-size-section').style.display = 'none';
-  document.getElementById('sell-details').style.display = 'none';
+  hide('sell-size-section'); hide('sell-details');
   document.getElementById('sell-note').value = '';
-  sellState = { itemId: null, size: null, qty: 1, discount: 0 };
-  populateSellDropdown();
-  renderLog();
-  renderStats();
-  renderInventory();
+  sellState = { itemId:null, size:null, qty:1, discount:0 };
+}
+
+// ============ VOID SALE ============
+function voidSale(key) {
+  if (!confirm('Void this sale? Inventory will be restored.')) return;
+  const sale = salesLog.find(s => s._key === key);
+  if (!sale || sale.voided) return;
+
+  // Restore inventory
+  const currentQty = (inventory[sale.itemId]?.sizes||{})[sale.size] || 0;
+  db.ref(`inventory/${sale.itemId}/sizes/${sale.size}`).set(currentQty + sale.qty);
+  db.ref(`sales/${key}/voided`).set(true);
+  db.ref(`sales/${key}/voidedBy`).set(currentUser);
+  db.ref(`sales/${key}/voidedAt`).set(Date.now());
+
+  showToast('Sale voided, inventory restored');
+}
+
+// ============ TRANSFER ============
+function onTransferFromChange() {
+  const from = document.getElementById('transfer-from').value;
+  transferState = { from, itemId:null, size:null, qty:1 };
+  const sel = document.getElementById('transfer-item');
+  sel.innerHTML = '<option value="">-- Choose --</option>';
+  if (!from) { hide('transfer-size-section'); hide('transfer-qty-section'); return; }
+
+  Object.entries(inventory).filter(([_,i]) => i.location === from).sort((a,b) => a[1].name.localeCompare(b[1].name)).forEach(([id, item]) => {
+    const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
+    if (total > 0) {
+      const o = document.createElement('option');
+      o.value = id; o.textContent = `${item.name} (${total})`;
+      sel.appendChild(o);
+    }
+  });
+  hide('transfer-size-section'); hide('transfer-qty-section');
+}
+
+function onTransferItemChange() {
+  const id = document.getElementById('transfer-item').value;
+  transferState.itemId = id; transferState.size = null; transferState.qty = 1;
+  if (!id) { hide('transfer-size-section'); hide('transfer-qty-section'); return; }
+  const item = inventory[id];
+  const grid = document.getElementById('transfer-sizes');
+  grid.innerHTML = '';
+  Object.entries(item.sizes||{}).forEach(([sz, ct]) => {
+    const btn = document.createElement('div');
+    btn.className = 'size-sell-btn' + (ct===0?' zero':'');
+    btn.innerHTML = `${sz}<span class="avail">${ct} here</span>`;
+    if (ct > 0) btn.onclick = () => selectTransferSize(sz);
+    btn.dataset.sz = sz;
+    grid.appendChild(btn);
+  });
+  show('transfer-size-section'); hide('transfer-qty-section');
+}
+
+function selectTransferSize(sz) {
+  transferState.size = sz; transferState.qty = 1;
+  document.querySelectorAll('#transfer-sizes .size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz===sz));
+  const dest = transferState.from === 'office' ? 'Storage' : 'Office';
+  const src = transferState.from === 'office' ? 'Office' : 'Storage';
+  document.getElementById('transfer-direction').textContent = `${src} → ${dest}`;
+  document.getElementById('transfer-qty-display').textContent = '1';
+  show('transfer-qty-section');
+}
+
+function adjTransferQty(d) {
+  const max = (inventory[transferState.itemId]?.sizes||{})[transferState.size] || 0;
+  transferState.qty = Math.max(1, Math.min(max, transferState.qty + d));
+  document.getElementById('transfer-qty-display').textContent = transferState.qty;
+}
+
+function executeTransfer() {
+  const { from, itemId, size, qty } = transferState;
+  if (!itemId || !size) return;
+  const item = inventory[itemId];
+  const avail = (item.sizes||{})[size] || 0;
+  if (qty > avail) { showToast('Not enough stock!'); return; }
+
+  const destLoc = from === 'office' ? 'storage' : 'office';
+
+  // Find matching item in destination, or create one
+  let destId = Object.entries(inventory).find(([id, i]) =>
+    i.name === item.name && i.type === item.type && i.location === destLoc
+  )?.[0];
+
+  const updates = {};
+  updates[`inventory/${itemId}/sizes/${size}`] = avail - qty;
+
+  if (destId) {
+    const destQty = (inventory[destId].sizes||{})[size] || 0;
+    updates[`inventory/${destId}/sizes/${size}`] = destQty + qty;
+  } else {
+    // Create new item at destination
+    destId = 'transfer-' + Date.now();
+    const newItem = { ...item, location: destLoc, sizes: { [size]: qty } };
+    delete newItem._key;
+    updates[`inventory/${destId}`] = newItem;
+  }
+
+  // Log the transfer
+  updates['transfers/' + Date.now()] = {
+    ts: Date.now(),
+    itemName: item.name,
+    size, qty,
+    from, to: destLoc,
+    user: currentUser
+  };
+
+  db.ref().update(updates);
+  showToast(`Transferred ${qty}x ${item.name} (${size}) → ${destLoc === 'office' ? 'Office' : 'Storage'}`);
+
+  // Reset
+  document.getElementById('transfer-from').value = '';
+  document.getElementById('transfer-item').innerHTML = '<option value="">-- Choose --</option>';
+  hide('transfer-size-section'); hide('transfer-qty-section');
+  transferState = { from:null, itemId:null, size:null, qty:1 };
 }
 
 // ============ INVENTORY ============
@@ -663,222 +770,163 @@ function renderInventory(filter = '') {
   const container = document.getElementById('inventory-list');
   const f = filter.toLowerCase();
   let html = '';
-
-  // Group by location then type
-  ['office', 'storage'].forEach(loc => {
-    const locItems = Object.values(inventory).filter(i => i.location === loc);
-    if (locItems.length === 0) return;
-    const locLabel = loc === 'office' ? 'Office / Floor' : 'Storage Unit';
-    html += `<div class="category-header" style="font-size:1.3em;color:var(--blue);margin-top:16px">${locLabel}</div>`;
-
+  ['office','storage'].forEach(loc => {
+    const locItems = Object.entries(inventory).filter(([_,i]) => i.location === loc);
+    if (!locItems.length) return;
+    html += `<div class="category-header" style="font-size:1.3em;color:var(--blue);margin-top:16px">${loc==='office'?'Office / Floor':'Storage Unit'}</div>`;
     const types = {};
-    locItems.forEach(item => {
+    locItems.forEach(([id,item]) => {
       const cat = PRICING[item.type]?.category || 'Other';
       if (!types[cat]) types[cat] = [];
-      types[cat].push(item);
+      types[cat].push([id,item]);
     });
-
     Object.keys(types).sort().forEach(cat => {
-      const items = types[cat].filter(i => !f || i.name.toLowerCase().includes(f));
-      if (items.length === 0) return;
+      const items = types[cat].filter(([_,i]) => !f || i.name.toLowerCase().includes(f));
+      if (!items.length) return;
       html += `<div class="category-header">${cat}</div>`;
-      items.forEach(item => {
-        const total = Object.values(item.sizes).reduce((a,b) => a+b, 0);
-        html += `<div class="item-card">
-          <div class="item-name">
-            <span>${item.name}</span>
-            <span class="item-total">${total} units</span>
-          </div>
-          <div class="size-grid">
-            ${Object.entries(item.sizes).map(([sz,ct]) =>
-              `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
-            ).join('')}
-          </div>
-        </div>`;
+      items.forEach(([id,item]) => {
+        const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
+        html += `<div class="item-card"><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
+          <div class="size-grid">${Object.entries(item.sizes||{}).map(([sz,ct]) =>
+            `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
+          ).join('')}</div></div>`;
       });
     });
   });
-
   container.innerHTML = html || '<p style="color:var(--dim);text-align:center;padding:40px">No items found</p>';
 }
 
 function filterInventory(val) { renderInventory(val); }
 
 // ============ LOG ============
-function renderLog(period = 'today') {
+let logPeriod = 'today';
+function renderLog() {
   const now = new Date();
   const todayStr = now.toISOString().slice(0,10);
   const weekAgo = new Date(now - 7*86400000);
 
   let filtered = salesLog;
-  if (period === 'today') filtered = salesLog.filter(s => s.ts.slice(0,10) === todayStr);
-  else if (period === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
+  if (logPeriod === 'today') filtered = salesLog.filter(s => new Date(s.ts).toISOString().slice(0,10) === todayStr);
+  else if (logPeriod === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
 
-  const totalRev = filtered.reduce((a,s) => a + s.total, 0);
-  const totalCost = filtered.reduce((a,s) => a + (s.cost||0), 0);
-  const totalItems = filtered.reduce((a,s) => a + s.qty, 0);
+  const active = filtered.filter(s => !s.voided);
+  const totalRev = active.reduce((a,s) => a + s.total, 0);
+  const totalCost = active.reduce((a,s) => a + (s.cost||0), 0);
+  const totalItems = active.reduce((a,s) => a + s.qty, 0);
 
   document.getElementById('day-totals').innerHTML = `
     <div><div class="stat-val">${totalItems}</div><div class="stat-label">Items Sold</div></div>
     <div><div class="stat-val">$${totalRev.toFixed(0)}</div><div class="stat-label">Revenue</div></div>
-    <div><div class="stat-val" style="color:var(--green)">$${(totalRev - totalCost).toFixed(0)}</div><div class="stat-label">Profit</div></div>
-  `;
+    <div><div class="stat-val" style="color:var(--green)">$${(totalRev-totalCost).toFixed(0)}</div><div class="stat-label">Profit</div></div>`;
 
   const list = document.getElementById('log-list');
-  if (filtered.length === 0) {
-    list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>';
-    return;
-  }
+  if (!filtered.length) { list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>'; return; }
   list.innerHTML = filtered.map(s => {
     const isDisc = s.discount !== '0%' && s.discount !== 0;
     const time = new Date(s.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-    return `<div class="log-entry">
-      <div class="info">
-        <div class="item-sold">${s.qty}x ${s.itemName} (${s.size})</div>
-        <div class="meta">${time} by ${s.user}${s.note ? ' — ' + s.note : ''}${isDisc ? ' [' + s.discount + ' off]' : ''}</div>
+    const date = new Date(s.ts).toLocaleDateString([], {month:'short',day:'numeric'});
+    const v = s.voided;
+    return `<div class="log-entry${v?' voided':''}">
+      <div class="log-top">
+        <div class="info">
+          <div class="item-sold">${s.qty}x ${s.itemName} (${s.size})</div>
+          <div class="meta">${date} ${time} by ${s.user}${s.note?' — '+s.note:''}${isDisc?' ['+s.discount+' off]':''}${v?' — VOIDED by '+s.voidedBy:''}</div>
+        </div>
+        <div class="amount${isDisc?' discount':''}${v?' voided':''}">$${s.total.toFixed(0)}</div>
       </div>
-      <div class="amount${isDisc?' discount':''}">$${s.total.toFixed(0)}</div>
+      ${!v ? `<button class="void-btn" onclick="voidSale('${s._key}')">Void Sale</button>` : ''}
     </div>`;
   }).join('');
 }
 
 function filterLog(period) {
-  document.querySelectorAll('#log-filter button').forEach(b => b.classList.toggle('active', b.dataset.f === period));
-  renderLog(period);
+  logPeriod = period;
+  document.querySelectorAll('#log-filter button').forEach(b => b.classList.toggle('active', b.dataset.f===period));
+  renderLog();
 }
 
 // ============ STATS ============
 function renderStats() {
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
   const monthStr = now.toISOString().slice(0,7);
+  const activeSales = salesLog.filter(s => !s.voided);
+  const monthSales = activeSales.filter(s => new Date(s.ts).toISOString().slice(0,7) === monthStr);
 
-  const todaySales = salesLog.filter(s => s.ts.slice(0,10) === todayStr);
-  const monthSales = salesLog.filter(s => s.ts.slice(0,7) === monthStr);
-
-  // Top sellers
   const itemCounts = {};
-  salesLog.forEach(s => {
-    itemCounts[s.itemName] = (itemCounts[s.itemName]||0) + s.qty;
-  });
+  activeSales.forEach(s => { itemCounts[s.itemName] = (itemCounts[s.itemName]||0) + s.qty; });
   const topSellers = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
 
-  // Total inventory value
-  let totalUnits = 0, totalRetailValue = 0, totalCostValue = 0;
+  let totalUnits=0, totalRetail=0, totalCostVal=0;
   Object.values(inventory).forEach(item => {
-    const units = Object.values(item.sizes).reduce((a,b) => a+b, 0);
+    const units = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
     const retail = PRICING[item.type]?.retail || 25;
-    const costKey = item.costKey || 'default';
-    const cost = COST[costKey] || COST.default;
-    totalUnits += units;
-    totalRetailValue += units * retail;
-    totalCostValue += units * cost;
+    const cost = COST[item.costKey] || COST.default;
+    totalUnits += units; totalRetail += units*retail; totalCostVal += units*cost;
   });
 
-  const monthRev = monthSales.reduce((a,s) => a+s.total, 0);
-  const monthCost = monthSales.reduce((a,s) => a+(s.cost||0), 0);
-  const monthProfit = monthRev - monthCost;
+  const mRev = monthSales.reduce((a,s) => a+s.total, 0);
+  const mCost = monthSales.reduce((a,s) => a+(s.cost||0), 0);
 
-  let html = `
-    <div class="stat-card">
-      <h3>Inventory Overview</h3>
-      <div class="stat-row"><span class="label">Total Units</span><span>${totalUnits.toLocaleString()}</span></div>
-      <div class="stat-row"><span class="label">Retail Value</span><span>$${totalRetailValue.toLocaleString()}</span></div>
-      <div class="stat-row"><span class="label">Cost Basis</span><span>$${totalCostValue.toLocaleString()}</span></div>
-      <div class="stat-row"><span class="label">Potential Profit</span><span style="color:var(--green)">$${(totalRetailValue-totalCostValue).toLocaleString()}</span></div>
-    </div>
-    <div class="stat-card">
-      <h3>This Month</h3>
-      <div class="stat-row"><span class="label">Items Sold</span><span>${monthSales.reduce((a,s)=>a+s.qty,0)}</span></div>
-      <div class="stat-row"><span class="label">Revenue</span><span>$${monthRev.toFixed(0)}</span></div>
-      <div class="stat-row"><span class="label">Cost</span><span>$${monthCost.toFixed(0)}</span></div>
-      <div class="stat-row"><span class="label">Profit</span><span style="color:var(--green)">$${monthProfit.toFixed(0)}</span></div>
-      <div class="stat-row"><span class="label">Margin</span><span>${monthRev > 0 ? ((monthProfit/monthRev)*100).toFixed(0) : 0}%</span></div>
-    </div>
-  `;
+  let html = `<div class="stat-card"><h3>Inventory Overview</h3>
+    <div class="stat-row"><span class="label">Total Units</span><span>${totalUnits.toLocaleString()}</span></div>
+    <div class="stat-row"><span class="label">Retail Value</span><span>$${totalRetail.toLocaleString()}</span></div>
+    <div class="stat-row"><span class="label">Cost Basis</span><span>$${totalCostVal.toLocaleString()}</span></div>
+    <div class="stat-row"><span class="label">Potential Profit</span><span style="color:var(--green)">$${(totalRetail-totalCostVal).toLocaleString()}</span></div></div>`;
 
-  if (topSellers.length > 0) {
+  html += `<div class="stat-card"><h3>This Month</h3>
+    <div class="stat-row"><span class="label">Items Sold</span><span>${monthSales.reduce((a,s)=>a+s.qty,0)}</span></div>
+    <div class="stat-row"><span class="label">Revenue</span><span>$${mRev.toFixed(0)}</span></div>
+    <div class="stat-row"><span class="label">Profit</span><span style="color:var(--green)">$${(mRev-mCost).toFixed(0)}</span></div>
+    <div class="stat-row"><span class="label">Margin</span><span>${mRev>0?((mRev-mCost)/mRev*100).toFixed(0):0}%</span></div></div>`;
+
+  if (topSellers.length) {
     html += `<div class="stat-card"><h3>Top Sellers (All Time)</h3>`;
-    topSellers.forEach(([name,ct]) => {
-      html += `<div class="stat-row"><span class="label">${name}</span><span>${ct} sold</span></div>`;
-    });
+    topSellers.forEach(([n,c]) => { html += `<div class="stat-row"><span class="label">${n}</span><span>${c} sold</span></div>`; });
     html += `</div>`;
   }
 
-  // Discount tracking
-  const discounted = salesLog.filter(s => s.discount !== '0%' && s.discount !== 0);
-  if (discounted.length > 0) {
+  const voided = salesLog.filter(s => s.voided);
+  if (voided.length) {
+    const lostRev = voided.reduce((a,s) => a+s.total, 0);
+    html += `<div class="stat-card"><h3>Voided Sales</h3>
+      <div class="stat-row"><span class="label">Total Voided</span><span>${voided.length}</span></div>
+      <div class="stat-row"><span class="label">Value Voided</span><span style="color:var(--accent)">$${lostRev.toFixed(0)}</span></div></div>`;
+  }
+
+  const discounted = activeSales.filter(s => s.discount !== '0%' && s.discount !== 0);
+  if (discounted.length) {
     const lostRev = discounted.reduce((a,s) => {
-      const fullPrice = (PRICING[s.type]?.retail || 25) * s.qty;
-      return a + (fullPrice - s.total);
+      return a + ((PRICING[s.type]?.retail||25)*s.qty - s.total);
     }, 0);
-    html += `<div class="stat-card">
-      <h3>Discounts / Comps</h3>
+    html += `<div class="stat-card"><h3>Discounts / Comps</h3>
       <div class="stat-row"><span class="label">Discounted Sales</span><span>${discounted.length}</span></div>
-      <div class="stat-row"><span class="label">Revenue Lost</span><span style="color:var(--yellow)">$${lostRev.toFixed(0)}</span></div>
-    </div>`;
+      <div class="stat-row"><span class="label">Revenue Lost</span><span style="color:var(--yellow)">$${lostRev.toFixed(0)}</span></div></div>`;
   }
 
   document.getElementById('stats-content').innerHTML = html;
 }
 
-// ============ TOAST ============
-function showToast(msg, saleId) {
-  const t = document.getElementById('toast');
-  t.innerHTML = msg + (saleId ? `<button class="undo-btn" onclick="undoSale(${saleId})">Undo</button>` : '');
-  t.style.display = 'block';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => { t.style.display = 'none'; }, 5000);
-}
-
-function undoSale(saleId) {
-  const idx = salesLog.findIndex(s => s.id === saleId);
-  if (idx === -1) return;
-  const sale = salesLog[idx];
-  // Restore inventory
-  if (inventory[sale.itemId]) {
-    inventory[sale.itemId].sizes[sale.size] = (inventory[sale.itemId].sizes[sale.size]||0) + sale.qty;
-    saveInventory();
-  }
-  salesLog.splice(idx, 1);
-  saveSales();
-  document.getElementById('toast').style.display = 'none';
-  populateSellDropdown();
-  renderInventory();
-  renderLog();
-  renderStats();
-  showToast('Sale undone');
-}
-
 // ============ MANAGE ============
 const ALL_SIZES = ['XS','S','M','L','XL','XXL','XXXL','XXXXL'];
 
-function showManageSection(section) {
-  ['add','restock','edit'].forEach(s => {
-    document.getElementById('manage-' + s).style.display = s === section ? 'block' : 'none';
-    document.getElementById('mg-btn-' + s).classList.toggle('active', s === section);
+function showManageSection(s) {
+  ['add','restock','edit'].forEach(x => {
+    document.getElementById('manage-'+x).style.display = x===s?'block':'none';
+    document.getElementById('mg-btn-'+x).classList.toggle('active', x===s);
   });
-  if (section === 'restock') populateRestockDropdown();
-  if (section === 'edit') populateEditDropdown();
+  if (s==='restock') populateRestockDropdown();
+  if (s==='edit') populateEditDropdown();
 }
 
-// -- ADD NEW ITEM --
 function renderAddSizes() {
   const grid = document.getElementById('add-sizes-grid');
   const oneSize = document.getElementById('add-onesize').checked;
   if (oneSize) {
-    grid.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
-      <span style="color:var(--dim);min-width:35px">OS</span>
-      <input type="number" class="sell-input" data-sz="OS" placeholder="0" style="margin:0" />
-    </div>`;
+    grid.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--dim);min-width:35px">OS</span><input type="number" class="f-input" data-sz="OS" placeholder="0" style="margin:0" /></div>`;
   } else {
-    grid.innerHTML = ALL_SIZES.map(sz => `<div style="display:flex;align-items:center;gap:8px">
-      <span style="color:var(--dim);min-width:40px">${sz}</span>
-      <input type="number" class="sell-input" data-sz="${sz}" placeholder="0" style="margin:0" />
-    </div>`).join('');
+    grid.innerHTML = ALL_SIZES.map(sz => `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--dim);min-width:40px">${sz}</span><input type="number" class="f-input" data-sz="${sz}" placeholder="0" style="margin:0" /></div>`).join('');
   }
 }
-function toggleOneSize() { renderAddSizes(); }
 
 function addNewItem() {
   const name = document.getElementById('add-name').value.trim();
@@ -892,143 +940,122 @@ function addNewItem() {
     const qty = parseInt(inp.value) || 0;
     if (qty > 0) sizes[inp.dataset.sz] = qty;
   });
+  if (!Object.keys(sizes).length) { showToast('Add at least one size with quantity'); return; }
 
-  if (Object.keys(sizes).length === 0) { showToast('Add at least one size with quantity'); return; }
-
-  const id = 'custom-' + Date.now();
-  const costKey = 'custom-' + id;
-  COST[costKey] = costVal;
-
-  inventory[id] = { id, name, type, location, costKey, sizes };
-  saveInventory();
-  // Save custom costs
-  localStorage.setItem('elbo-custom-costs', JSON.stringify(
-    Object.fromEntries(Object.entries(COST).filter(([k]) => k.startsWith('custom-')))
-  ));
+  const id = 'item-' + Date.now();
+  db.ref(`inventory/${id}`).set({ name, type, location, costKey:'custom', sizes });
+  db.ref(`customCosts/${id}`).set(costVal);
+  COST['custom-'+id] = costVal;
 
   showToast(`Added: ${name}`);
   document.getElementById('add-name').value = '';
   document.getElementById('add-cost').value = '';
   renderAddSizes();
-  populateSellDropdown();
-  renderInventory();
-  renderStats();
 }
 
-// -- RESTOCK --
 function populateRestockDropdown() {
   const sel = document.getElementById('restock-item');
-  sel.innerHTML = '<option value="">-- Choose Item --</option>';
-  Object.values(inventory).sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
-    const loc = item.location === 'storage' ? ' [Storage]' : '';
+  sel.innerHTML = '<option value="">-- Choose --</option>';
+  Object.entries(inventory).sort((a,b) => a[1].name.localeCompare(b[1].name)).forEach(([id,item]) => {
+    const loc = item.location==='storage'?' [Storage]':'';
     const o = document.createElement('option');
-    o.value = item.id;
-    o.textContent = item.name + loc;
+    o.value = id; o.textContent = item.name + loc;
     sel.appendChild(o);
   });
 }
 
 function onRestockItemChange() {
   const id = document.getElementById('restock-item').value;
-  if (!id) { document.getElementById('restock-sizes').style.display = 'none'; return; }
+  if (!id) { hide('restock-sizes'); return; }
   const item = inventory[id];
   const grid = document.getElementById('restock-sizes-grid');
-  const existingSizes = Object.keys(item.sizes);
-  const sizesToShow = existingSizes.includes('OS') ? ['OS'] : ALL_SIZES;
-
+  const hasSizes = Object.keys(item.sizes||{});
+  const sizesToShow = hasSizes.includes('OS') ? ['OS'] : ALL_SIZES;
   grid.innerHTML = sizesToShow.map(sz => {
-    const current = item.sizes[sz] || 0;
-    return `<div style="display:flex;align-items:center;gap:8px">
-      <span style="color:var(--dim);min-width:40px">${sz}</span>
-      <input type="number" class="sell-input" data-sz="${sz}" placeholder="+0" style="margin:0" />
-      <span style="color:var(--dim);font-size:0.8em">(now: ${current})</span>
-    </div>`;
+    const cur = (item.sizes||{})[sz] || 0;
+    return `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--dim);min-width:40px">${sz}</span><input type="number" class="f-input" data-sz="${sz}" placeholder="+0" style="margin:0" /><span style="color:var(--dim);font-size:0.8em">(${cur})</span></div>`;
   }).join('');
-  document.getElementById('restock-sizes').style.display = 'block';
+  show('restock-sizes');
 }
 
 function restockItem() {
   const id = document.getElementById('restock-item').value;
   if (!id) return;
   const item = inventory[id];
+  const updates = {};
   let added = 0;
   document.querySelectorAll('#restock-sizes-grid input[data-sz]').forEach(inp => {
     const qty = parseInt(inp.value) || 0;
     if (qty > 0) {
-      item.sizes[inp.dataset.sz] = (item.sizes[inp.dataset.sz] || 0) + qty;
+      const cur = (item.sizes||{})[inp.dataset.sz] || 0;
+      updates[`inventory/${id}/sizes/${inp.dataset.sz}`] = cur + qty;
       added += qty;
     }
   });
-  if (added === 0) { showToast('Enter quantities to add'); return; }
-  saveInventory();
+  if (!added) { showToast('Enter quantities to add'); return; }
+  db.ref().update(updates);
   showToast(`Restocked ${item.name}: +${added} units`);
   onRestockItemChange();
-  populateSellDropdown();
-  renderInventory();
-  renderStats();
 }
 
-// -- EDIT ITEM --
 function populateEditDropdown() {
   const sel = document.getElementById('edit-item');
-  sel.innerHTML = '<option value="">-- Choose Item --</option>';
-  Object.values(inventory).sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
-    const loc = item.location === 'storage' ? ' [Storage]' : '';
+  sel.innerHTML = '<option value="">-- Choose --</option>';
+  Object.entries(inventory).sort((a,b) => a[1].name.localeCompare(b[1].name)).forEach(([id,item]) => {
     const o = document.createElement('option');
-    o.value = item.id;
-    o.textContent = item.name + loc;
+    o.value = id; o.textContent = item.name + (item.location==='storage'?' [Storage]':'');
     sel.appendChild(o);
   });
 }
 
 function onEditItemChange() {
   const id = document.getElementById('edit-item').value;
-  if (!id) { document.getElementById('edit-fields').style.display = 'none'; return; }
+  if (!id) { hide('edit-fields'); return; }
   const item = inventory[id];
   document.getElementById('edit-name').value = item.name;
   document.getElementById('edit-type').value = item.type;
   document.getElementById('edit-location').value = item.location;
-  document.getElementById('edit-fields').style.display = 'block';
+  show('edit-fields');
 }
 
 function saveEditItem() {
   const id = document.getElementById('edit-item').value;
   if (!id) return;
-  inventory[id].name = document.getElementById('edit-name').value.trim();
-  inventory[id].type = document.getElementById('edit-type').value;
-  inventory[id].location = document.getElementById('edit-location').value;
-  saveInventory();
+  db.ref(`inventory/${id}/name`).set(document.getElementById('edit-name').value.trim());
+  db.ref(`inventory/${id}/type`).set(document.getElementById('edit-type').value);
+  db.ref(`inventory/${id}/location`).set(document.getElementById('edit-location').value);
   showToast('Item updated');
-  populateSellDropdown();
-  populateEditDropdown();
-  renderInventory();
-  renderStats();
 }
 
 function deleteItem() {
   const id = document.getElementById('edit-item').value;
   if (!id) return;
-  const name = inventory[id].name;
-  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-  delete inventory[id];
-  saveInventory();
-  showToast(`Deleted: ${name}`);
-  document.getElementById('edit-fields').style.display = 'none';
-  populateSellDropdown();
-  populateEditDropdown();
-  renderInventory();
-  renderStats();
+  if (!confirm(`Delete "${inventory[id].name}"? Cannot be undone.`)) return;
+  db.ref(`inventory/${id}`).remove();
+  showToast('Item deleted');
+  hide('edit-fields');
+  document.getElementById('edit-item').value = '';
 }
 
-// Load custom costs from localStorage
-const savedCosts = JSON.parse(localStorage.getItem('elbo-custom-costs') || '{}');
-Object.assign(COST, savedCosts);
+// ============ UTILS ============
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
 
-// Init add sizes grid
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// Init add sizes
 renderAddSizes();
 
-// ============ BOOT ============
-init();
+// Load custom costs from Firebase
+db.ref('customCosts').on('value', snap => {
+  const data = snap.val() || {};
+  Object.entries(data).forEach(([k,v]) => { COST['custom-'+k] = v; });
+});
 </script>
 </body>
 </html>
