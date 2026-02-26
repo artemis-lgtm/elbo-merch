@@ -81,6 +81,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .log-entry .amount.discount { color:var(--yellow); }
 .log-entry .amount.voided { color:var(--accent); text-decoration:line-through; }
 .log-entry.voided { opacity:0.5; }
+.log-entry.addition { border-left:3px solid var(--blue); }
+.log-entry .amount.cost { color:var(--accent2); }
 .void-btn { background:none; border:1px solid var(--accent); color:var(--accent); padding:3px 8px; border-radius:4px; cursor:pointer; font-size:0.75em; margin-top:4px; }
 .void-btn:hover { background:rgba(255,59,59,0.15); }
 .day-total { background:var(--surface2); padding:12px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-around; text-align:center; }
@@ -838,7 +840,7 @@ function renderLog() {
   if (logPeriod === 'today') filtered = salesLog.filter(s => localDateStr(new Date(s.ts)) === todayStr);
   else if (logPeriod === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
 
-  const active = filtered.filter(s => !s.voided);
+  const active = filtered.filter(s => !s.voided && !s.action);
   const totalRev = active.reduce((a,s) => a + s.total, 0);
   const totalCost = active.reduce((a,s) => a + (s.cost||0), 0);
   const totalItems = active.reduce((a,s) => a + s.qty, 0);
@@ -851,10 +853,27 @@ function renderLog() {
   const list = document.getElementById('log-list');
   if (!filtered.length) { list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>'; return; }
   list.innerHTML = filtered.map(s => {
-    const isDisc = s.discount !== '0%' && s.discount !== 0;
     const time = new Date(s.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     const date = new Date(s.ts).toLocaleDateString([], {month:'short',day:'numeric'});
     const v = s.voided;
+
+    // Inventory addition or restock
+    if (s.action === 'added' || s.action === 'restock') {
+      const label = s.action === 'added' ? 'NEW PRODUCT' : 'RESTOCK';
+      const locName = s.location === 'storage' ? 'Storage' : 'Office';
+      return `<div class="log-entry addition">
+        <div class="log-top">
+          <div class="info">
+            <div class="item-sold">${label}: ${s.itemName}</div>
+            <div class="meta">${date} ${time} by ${s.user} — +${s.qty} units (${s.sizeBreakdown}) → ${locName}</div>
+          </div>
+          <div class="amount cost">-$${(s.totalCost||0).toFixed(0)}</div>
+        </div>
+      </div>`;
+    }
+
+    // Regular sale
+    const isDisc = s.discount !== '0%' && s.discount !== 0;
     return `<div class="log-entry${v?' voided':''}">
       <div class="log-top">
         <div class="info">
@@ -977,6 +996,26 @@ function addNewItem() {
   db.ref(`customCosts/${id}`).set(costVal);
   COST['custom-'+id] = costVal;
 
+  // Log the addition
+  const totalQty = Object.values(sizes).reduce((a,b) => a+b, 0);
+  const sizeList = Object.entries(sizes).map(([sz,q]) => `${sz}:${q}`).join(', ');
+  db.ref('sales').push({
+    ts: Date.now(),
+    action: 'added',
+    itemId: id,
+    itemName: name,
+    type,
+    location,
+    qty: totalQty,
+    sizeBreakdown: sizeList,
+    unitCost: costVal,
+    totalCost: costVal * totalQty,
+    total: 0,
+    cost: costVal * totalQty,
+    user: currentUser,
+    voided: false
+  });
+
   showToast(`Added: ${name}`);
   document.getElementById('add-name').value = '';
   document.getElementById('add-cost').value = '';
@@ -1024,6 +1063,32 @@ function restockItem() {
   });
   if (!added) { showToast('Enter quantities to add'); return; }
   db.ref().update(updates);
+
+  // Log the restock
+  const ck = item.costKey === 'custom' ? 'custom-'+id : (item.costKey || 'default');
+  const unitCost = COST[ck] || COST.default;
+  const sizeList = [];
+  document.querySelectorAll('#restock-sizes-grid input[data-sz]').forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) sizeList.push(`${inp.dataset.sz}:${qty}`);
+  });
+  db.ref('sales').push({
+    ts: Date.now(),
+    action: 'restock',
+    itemId: id,
+    itemName: item.name,
+    type: item.type,
+    location: item.location,
+    qty: added,
+    sizeBreakdown: sizeList.join(', '),
+    unitCost,
+    totalCost: unitCost * added,
+    total: 0,
+    cost: unitCost * added,
+    user: currentUser,
+    voided: false
+  });
+
   showToast(`Restocked ${item.name}: +${added} units`);
   onRestockItemChange();
 }
