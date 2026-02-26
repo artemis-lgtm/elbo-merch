@@ -828,13 +828,14 @@ function filterInventory(val) { renderInventory(val); }
 
 // ============ LOG ============
 let logPeriod = 'today';
+function localDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function renderLog() {
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
+  const todayStr = localDateStr(now);
   const weekAgo = new Date(now - 7*86400000);
 
   let filtered = salesLog;
-  if (logPeriod === 'today') filtered = salesLog.filter(s => new Date(s.ts).toISOString().slice(0,10) === todayStr);
+  if (logPeriod === 'today') filtered = salesLog.filter(s => localDateStr(new Date(s.ts)) === todayStr);
   else if (logPeriod === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
 
   const active = filtered.filter(s => !s.voided);
@@ -876,9 +877,9 @@ function filterLog(period) {
 // ============ STATS ============
 function renderStats() {
   const now = new Date();
-  const monthStr = now.toISOString().slice(0,7);
+  const monthStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   const activeSales = salesLog.filter(s => !s.voided);
-  const monthSales = activeSales.filter(s => new Date(s.ts).toISOString().slice(0,7) === monthStr);
+  const monthSales = activeSales.filter(s => { const d=new Date(s.ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')===monthStr; });
 
   const itemCounts = {};
   activeSales.forEach(s => { itemCounts[s.itemName] = (itemCounts[s.itemName]||0) + s.qty; });
