@@ -116,6 +116,82 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 20px; border-radius:8px; font-weight:600; z-index:999; display:none; max-width:90%; text-align:center; }
 
+/* YEAR-END SUMMARY */
+.year-summary-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid var(--yellow);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+.year-summary-card h3 {
+  color: var(--yellow);
+  font-size: 1.2em;
+  margin-bottom: 4px;
+  text-align: center;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.year-summary-card .summary-subtitle {
+  text-align: center;
+  color: var(--dim);
+  font-size: 0.8em;
+  margin-bottom: 16px;
+}
+.year-summary-card .summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.year-summary-card .summary-stat {
+  text-align: center;
+  padding: 10px 6px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+}
+.year-summary-card .summary-stat .val {
+  font-size: 1.3em;
+  font-weight: 700;
+}
+.year-summary-card .summary-stat .val.green { color: var(--green); }
+.year-summary-card .summary-stat .val.yellow { color: var(--yellow); }
+.year-summary-card .summary-stat .label {
+  font-size: 0.75em;
+  color: var(--dim);
+  margin-top: 2px;
+}
+.year-summary-card .summary-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.year-summary-card .summary-section h4 {
+  color: var(--dim);
+  font-size: 0.8em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.year-summary-card .summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.85em;
+}
+.year-summary-card .summary-row .rank { color: var(--dim); margin-right: 6px; }
+.year-summary-card .summary-row .qty { color: var(--accent2); }
+.year-summary-card .summary-row .rev { color: var(--green); }
+.year-summary-card .inv-snapshot {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85em;
+}
+.year-summary-card .inv-snapshot .label { color: var(--dim); }
+
 @media(max-width:400px) {
   .size-sell-grid { grid-template-columns:repeat(3,1fr); }
 }
@@ -248,7 +324,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="log-filter" id="log-filter">
       <button class="active" data-f="today" onclick="filterLog('today')">Today</button>
       <button data-f="week" onclick="filterLog('week')">This Week</button>
+      <button data-f="month" onclick="filterLog('month')">Month</button>
       <button data-f="all" onclick="filterLog('all')">All</button>
+      <span id="year-filters"></span>
     </div>
     <div id="log-list"></div>
   </div>
@@ -429,6 +507,7 @@ let inventory = {};
 let salesLog = [];
 let sellState = { itemId:null, size:null, qty:1, discount:0 };
 let transferState = { from:null, to:null, itemId:null, size:null, qty:1 };
+let yearlySummaries = {};
 let dbReady = false;
 
 // ============ PASSWORD ============
@@ -511,6 +590,16 @@ function bootApp() {
     salesLog = Object.entries(data).map(([k,v]) => ({...v, _key:k})).sort((a,b) => b.ts - a.ts);
     renderLog();
     renderStats();
+    updateYearFilters();
+    // Auto-generate year-end summary if a year boundary has passed
+    setTimeout(checkAutoSummary, 2000);
+  });
+
+  // Listen for yearly summaries
+  db.ref('yearly-summaries').on('value', snap => {
+    yearlySummaries = snap.val() || {};
+    renderLog();
+    updateYearFilters();
   });
 }
 
@@ -835,10 +924,31 @@ function renderLog() {
   const now = new Date();
   const todayStr = localDateStr(now);
   const weekAgo = new Date(now - 7*86400000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   let filtered = salesLog;
   if (logPeriod === 'today') filtered = salesLog.filter(s => localDateStr(new Date(s.ts)) === todayStr);
   else if (logPeriod === 'week') filtered = salesLog.filter(s => new Date(s.ts) >= weekAgo);
+  else if (logPeriod === 'month') filtered = salesLog.filter(s => new Date(s.ts) >= monthStart);
+  else if (logPeriod.startsWith('year-')) {
+    const yr = parseInt(logPeriod.slice(5));
+    const ys = new Date(yr, 0, 1).getTime(), ye = new Date(yr+1, 0, 1).getTime();
+    filtered = salesLog.filter(s => s.ts >= ys && s.ts < ye);
+  }
+
+  // Merge yearly summaries into the display list
+  let combined = filtered.map(s => ({...s, _type: 'sale'}));
+  Object.values(yearlySummaries).forEach(summary => {
+    if (!summary || !summary.ts) return;
+    let include = false;
+    if (logPeriod === 'all') include = true;
+    else if (logPeriod === 'month') include = new Date(summary.ts) >= monthStart;
+    else if (logPeriod === 'week') include = new Date(summary.ts) >= weekAgo;
+    else if (logPeriod === 'today') include = localDateStr(new Date(summary.ts)) === todayStr;
+    else if (logPeriod.startsWith('year-')) include = summary.year === parseInt(logPeriod.slice(5));
+    if (include) combined.push({...summary, _type: 'year-summary'});
+  });
+  combined.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
   const active = filtered.filter(s => !s.voided && !s.action);
   const totalRev = active.reduce((a,s) => a + s.total, 0);
@@ -851,8 +961,11 @@ function renderLog() {
     <div><div class="stat-val" style="color:var(--green)">$${(totalRev-totalCost).toFixed(0)}</div><div class="stat-label">Profit</div></div>`;
 
   const list = document.getElementById('log-list');
-  if (!filtered.length) { list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>'; return; }
-  list.innerHTML = filtered.map(s => {
+  if (!combined.length) { list.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No sales recorded</p>'; return; }
+  list.innerHTML = combined.map(s => {
+    // Year-end summary card
+    if (s._type === 'year-summary') return renderYearSummaryHTML(s);
+
     const time = new Date(s.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     const date = new Date(s.ts).toLocaleDateString([], {month:'short',day:'numeric'});
     const v = s.voided;
@@ -891,6 +1004,163 @@ function filterLog(period) {
   logPeriod = period;
   document.querySelectorAll('#log-filter button').forEach(b => b.classList.toggle('active', b.dataset.f===period));
   renderLog();
+}
+
+// ============ YEAR-END SUMMARIES ============
+function generateYearlySummary(year) {
+  const yearStart = new Date(year, 0, 1).getTime();
+  const yearEnd = new Date(year + 1, 0, 1).getTime();
+
+  const yearSales = salesLog.filter(s =>
+    s.ts >= yearStart && s.ts < yearEnd && !s.voided && !s.action
+  );
+  if (!yearSales.length) { showToast('No sales data for ' + year); return null; }
+
+  const totalUnits = yearSales.reduce((a, s) => a + s.qty, 0);
+  const totalRevenue = yearSales.reduce((a, s) => a + s.total, 0);
+  const totalCost = yearSales.reduce((a, s) => a + (s.cost || 0), 0);
+  const profit = totalRevenue - totalCost;
+  const margin = totalRevenue > 0 ? (profit / totalRevenue * 100) : 0;
+
+  // Top sellers
+  const itemCounts = {};
+  const itemRevenue = {};
+  yearSales.forEach(s => {
+    itemCounts[s.itemName] = (itemCounts[s.itemName] || 0) + s.qty;
+    itemRevenue[s.itemName] = (itemRevenue[s.itemName] || 0) + s.total;
+  });
+  const topSellers = Object.entries(itemCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, qty]) => ({ name, qty, revenue: itemRevenue[name] || 0 }));
+
+  // Category breakdown
+  const catCounts = {};
+  const catRevenue = {};
+  yearSales.forEach(s => {
+    const cat = PRICING[s.type]?.category || 'Other';
+    catCounts[cat] = (catCounts[cat] || 0) + s.qty;
+    catRevenue[cat] = (catRevenue[cat] || 0) + s.total;
+  });
+  const categories = Object.entries(catCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, qty]) => ({ cat, qty, revenue: catRevenue[cat] || 0 }));
+
+  // Discounts
+  const discounted = yearSales.filter(s => s.discount !== '0%' && s.discount !== 0);
+  const discountCount = discounted.length;
+  const discountValue = discounted.reduce((a, s) => {
+    return a + ((PRICING[s.type]?.retail || 25) * s.qty - s.total);
+  }, 0);
+
+  // Restocks during the year
+  const yearRestocks = salesLog.filter(s =>
+    s.ts >= yearStart && s.ts < yearEnd && (s.action === 'added' || s.action === 'restock')
+  );
+  const restockUnits = yearRestocks.reduce((a, s) => a + s.qty, 0);
+  const restockCost = yearRestocks.reduce((a, s) => a + (s.totalCost || 0), 0);
+
+  // Inventory snapshot at time of generation
+  let invUnits = 0, invRetail = 0, invCost = 0;
+  Object.entries(inventory).forEach(([id, item]) => {
+    const units = Object.values(item.sizes || {}).reduce((a, b) => a + b, 0);
+    const retail = PRICING[item.type]?.retail || 25;
+    const ck = item.costKey === 'custom' ? 'custom-' + id : (item.costKey || 'default');
+    const cost = COST[ck] || COST.default;
+    invUnits += units;
+    invRetail += units * retail;
+    invCost += units * cost;
+  });
+
+  const summary = {
+    year,
+    generatedAt: Date.now(),
+    ts: new Date(year, 11, 31, 23, 59, 59).getTime(),
+    totalUnitsSold: totalUnits,
+    totalRevenue,
+    totalCost,
+    profit,
+    margin: Math.round(margin * 10) / 10,
+    topSellers,
+    categories,
+    discountCount,
+    discountValue: Math.round(discountValue),
+    restockUnits,
+    restockCost,
+    endingInventory: { units: invUnits, retailValue: invRetail, costBasis: invCost },
+    totalTransactions: yearSales.length
+  };
+
+  db.ref(`yearly-summaries/${year}`).set(summary);
+  showToast(year + ' Year-End Summary saved');
+  return summary;
+}
+
+function checkAutoSummary() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const prevYear = currentYear - 1;
+  // Only auto-generate if previous year has sales but no summary yet
+  if (yearlySummaries[prevYear]) return;
+  const yearStart = new Date(prevYear, 0, 1).getTime();
+  const yearEnd = new Date(currentYear, 0, 1).getTime();
+  const prevSales = salesLog.filter(s => s.ts >= yearStart && s.ts < yearEnd && !s.voided && !s.action);
+  if (prevSales.length > 0) {
+    generateYearlySummary(prevYear);
+  }
+}
+
+function renderYearSummaryHTML(s) {
+  const genDate = new Date(s.generatedAt).toLocaleDateString([], {month:'long', day:'numeric', year:'numeric'});
+
+  let topHtml = '';
+  if (s.topSellers && s.topSellers.length) {
+    topHtml = s.topSellers.map((t, i) =>
+      `<div class="summary-row"><span><span class="rank">${i+1}.</span> ${t.name}</span><span class="qty">${t.qty} sold</span></div>`
+    ).join('');
+  }
+
+  let catHtml = '';
+  if (s.categories && s.categories.length) {
+    catHtml = s.categories.map(c =>
+      `<div class="summary-row"><span>${c.cat}</span><span><span class="qty">${c.qty} sold</span> &mdash; <span class="rev">$${c.revenue.toLocaleString()}</span></span></div>`
+    ).join('');
+  }
+
+  return `<div class="year-summary-card">
+    <h3>${s.year} Year in Review</h3>
+    <div class="summary-subtitle">Generated ${genDate}</div>
+    <div class="summary-grid">
+      <div class="summary-stat"><div class="val">${s.totalUnitsSold.toLocaleString()}</div><div class="label">Items Sold</div></div>
+      <div class="summary-stat"><div class="val">$${s.totalRevenue.toLocaleString()}</div><div class="label">Revenue</div></div>
+      <div class="summary-stat"><div class="val green">$${s.profit.toLocaleString()}</div><div class="label">Profit</div></div>
+      <div class="summary-stat"><div class="val yellow">${s.margin}%</div><div class="label">Margin</div></div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-stat"><div class="val">${s.totalTransactions}</div><div class="label">Transactions</div></div>
+      <div class="summary-stat"><div class="val">${s.discountCount}</div><div class="label">Discounted</div></div>
+    </div>
+    ${topHtml ? `<div class="summary-section"><h4>Top Sellers</h4>${topHtml}</div>` : ''}
+    ${catHtml ? `<div class="summary-section"><h4>By Category</h4>${catHtml}</div>` : ''}
+    ${s.restockUnits ? `<div class="summary-section"><h4>Restocks</h4><div class="summary-row"><span>Units Added</span><span class="qty">${s.restockUnits.toLocaleString()}</span></div><div class="summary-row"><span>Restock Cost</span><span>$${s.restockCost.toLocaleString()}</span></div></div>` : ''}
+    ${s.discountValue ? `<div class="summary-section"><h4>Discounts / Comps</h4><div class="summary-row"><span>Revenue Discounted</span><span style="color:var(--yellow)">$${s.discountValue.toLocaleString()}</span></div></div>` : ''}
+    <div class="inv-snapshot">
+      <div class="label">Ending Inventory</div>
+      <div>${s.endingInventory.units.toLocaleString()} units &mdash; $${s.endingInventory.retailValue.toLocaleString()} retail &mdash; $${s.endingInventory.costBasis.toLocaleString()} cost</div>
+    </div>
+  </div>`;
+}
+
+function updateYearFilters() {
+  const years = new Set();
+  salesLog.forEach(s => years.add(new Date(s.ts).getFullYear()));
+  Object.keys(yearlySummaries).forEach(y => years.add(parseInt(y)));
+  const container = document.getElementById('year-filters');
+  if (!container) return;
+  if (years.size <= 1 && !Object.keys(yearlySummaries).length) { container.innerHTML = ''; return; }
+  container.innerHTML = [...years].sort((a,b) => b-a).map(y =>
+    `<button data-f="year-${y}" onclick="filterLog('year-${y}')"${logPeriod==='year-'+y?' class="active"':''}>${y}</button>`
+  ).join('');
 }
 
 // ============ STATS ============
@@ -950,6 +1220,22 @@ function renderStats() {
     html += `<div class="stat-card"><h3>Discounts / Comps</h3>
       <div class="stat-row"><span class="label">Discounted Sales</span><span>${discounted.length}</span></div>
       <div class="stat-row"><span class="label">Revenue Lost</span><span style="color:var(--yellow)">$${lostRev.toFixed(0)}</span></div></div>`;
+  }
+
+  // Year-end summary section
+  const currentYear = now.getFullYear();
+  const yearsWithSales = [...new Set(salesLog.map(s => new Date(s.ts).getFullYear()))].sort((a,b) => b-a);
+  const summaryBtns = yearsWithSales.map(y => {
+    const exists = yearlySummaries[y];
+    if (exists) {
+      const genDate = new Date(exists.generatedAt).toLocaleDateString([], {month:'short', day:'numeric'});
+      return `<div class="stat-row"><span class="label">${y}</span><span style="color:var(--green)">Generated ${genDate}</span></div>`;
+    } else {
+      return `<div class="stat-row"><span class="label">${y}</span><button onclick="generateYearlySummary(${y})" style="padding:4px 12px;background:var(--yellow);color:#000;border:none;border-radius:4px;cursor:pointer;font-size:0.85em">Generate Summary</button></div>`;
+    }
+  }).join('');
+  if (summaryBtns) {
+    html += `<div class="stat-card"><h3>Year-End Summaries</h3>${summaryBtns}<p style="color:var(--dim);font-size:0.75em;margin-top:8px">Summaries auto-generate when a new year starts. Use buttons above to generate manually.</p></div>`;
   }
 
   document.getElementById('stats-content').innerHTML = html;
