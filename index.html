@@ -433,6 +433,8 @@ const PRICING = {
   jersey: { retail: 25, category: 'Jerseys' },
 };
 const COST = { neon:10, camo:16, hat:12, hoodie:17, default:12 };
+const SIZE_ORDER = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','OS'];
+function sortedSizes(sizes) { return Object.entries(sizes||{}).sort((a,b) => { const ai = SIZE_ORDER.indexOf(a[0]), bi = SIZE_ORDER.indexOf(b[0]); return (ai===-1?99:ai) - (bi===-1?99:bi); }); }
 
 // ============ INITIAL INVENTORY ============
 const INIT_INVENTORY = {
@@ -654,7 +656,7 @@ function onSellItemChange() {
   const item = inventory[id];
   const grid = document.getElementById('sell-sizes');
   grid.innerHTML = '';
-  Object.entries(item.sizes||{}).forEach(([sz, ct]) => {
+  sortedSizes(item.sizes).forEach(([sz, ct]) => {
     const btn = document.createElement('div');
     btn.className = 'size-sell-btn' + (ct===0?' zero':'');
     btn.innerHTML = `${sz}<span class="avail">${ct} left</span>`;
@@ -807,7 +809,7 @@ function onTransferItemChange() {
   const item = inventory[id];
   const grid = document.getElementById('transfer-sizes');
   grid.innerHTML = '';
-  Object.entries(item.sizes||{}).forEach(([sz, ct]) => {
+  sortedSizes(item.sizes).forEach(([sz, ct]) => {
     const btn = document.createElement('div');
     btn.className = 'size-sell-btn' + (ct===0?' zero':'');
     btn.innerHTML = `${sz}<span class="avail">${ct} here</span>`;
@@ -906,7 +908,7 @@ function renderInventory(filter = '') {
       items.forEach(([id,item]) => {
         const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
         html += `<div class="item-card"><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
-          <div class="size-grid">${Object.entries(item.sizes||{}).map(([sz,ct]) =>
+          <div class="size-grid">${sortedSizes(item.sizes).map(([sz,ct]) =>
             `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
           ).join('')}</div></div>`;
       });
@@ -1284,7 +1286,7 @@ function addNewItem() {
 
   // Log the addition
   const totalQty = Object.values(sizes).reduce((a,b) => a+b, 0);
-  const sizeList = Object.entries(sizes).map(([sz,q]) => `${sz}:${q}`).join(', ');
+  const sizeList = sortedSizes(sizes).map(([sz,q]) => `${sz}:${q}`).join(', ');
   db.ref('sales').push({
     ts: Date.now(),
     action: 'added',
