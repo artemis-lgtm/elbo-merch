@@ -285,7 +285,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <label>From</label>
       <select class="f-select" id="transfer-from" onchange="onTransferFromChange()">
         <option value="">-- Choose Location --</option>
-        <option value="office">Office / Floor</option>
+        <option value="office">Office</option>
         <option value="storage">Storage Unit</option>
       </select>
     </div>
@@ -293,7 +293,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <label>To</label>
       <select class="f-select" id="transfer-to" onchange="onTransferToChange()">
         <option value="">-- Choose Destination --</option>
-        <option value="office">Office / Floor</option>
+        <option value="office">Office</option>
         <option value="storage">Storage Unit</option>
       </select>
     </div>
@@ -354,7 +354,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         </select>
       </div>
       <div class="f-section"><label>Location</label>
-        <select class="f-select" id="add-location"><option value="office">Office / Floor</option><option value="storage">Storage Unit</option></select>
+        <select class="f-select" id="add-location"><option value="office">Office</option><option value="storage">Storage Unit</option></select>
       </div>
       <div class="f-section"><label>Our Cost ($)</label><input type="number" class="f-input" id="add-cost" placeholder="e.g. 10" /></div>
       <div class="f-section">
@@ -395,7 +395,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
           </select>
         </div>
         <div class="f-section"><label>Location</label>
-          <select class="f-select" id="edit-location"><option value="office">Office / Floor</option><option value="storage">Storage Unit</option></select>
+          <select class="f-select" id="edit-location"><option value="office">Office</option><option value="storage">Storage Unit</option></select>
         </div>
         <button class="action-btn" onclick="saveEditItem()">Save Changes</button>
         <button class="action-btn secondary" style="margin-top:8px" onclick="deleteItem()">Delete Item</button>
@@ -821,7 +821,7 @@ function onTransferItemChange() {
 function selectTransferSize(sz) {
   transferState.size = sz; transferState.qty = 1;
   document.querySelectorAll('#transfer-sizes .size-sell-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz===sz));
-  const locNames = { office:'Office / Floor', storage:'Storage Unit' };
+  const locNames = { office:'Office', storage:'Storage Unit' };
   const src = locNames[transferState.from] || transferState.from;
   const dest = locNames[transferState.to] || transferState.to;
   document.getElementById('transfer-direction').textContent = `${src} → ${dest}`;
@@ -864,7 +864,7 @@ function executeTransfer() {
   }
 
   // Log the transfer
-  const locNames = { office:'Office / Floor', storage:'Storage Unit' };
+  const locNames = { office:'Office', storage:'Storage Unit' };
   updates['transfers/' + Date.now()] = {
     ts: Date.now(),
     itemName: item.name,
@@ -892,7 +892,7 @@ function renderInventory(filter = '') {
   ['office','storage'].forEach(loc => {
     const locItems = Object.entries(inventory).filter(([_,i]) => i.location === loc);
     if (!locItems.length) return;
-    html += `<div class="category-header" style="font-size:1.3em;color:var(--blue);margin-top:16px">${loc==='office'?'Office / Floor':'Storage Unit'}</div>`;
+    html += `<div class="category-header" style="font-size:1.3em;color:var(--blue);margin-top:16px">${loc==='office'?'Office':'Storage Unit'}</div>`;
     const types = {};
     locItems.forEach(([id,item]) => {
       const cat = PRICING[item.type]?.category || 'Other';
