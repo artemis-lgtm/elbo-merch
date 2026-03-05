@@ -629,11 +629,11 @@ function populateSellDropdown() {
   sel.innerHTML = '<option value="">-- Choose Item --</option>';
   const grouped = {};
   Object.entries(inventory).forEach(([id, item]) => {
+    if (item.location === 'storage') return; // Sales only from office inventory
     const cat = PRICING[item.type]?.category || 'Other';
-    const loc = item.location === 'storage' ? ' [Storage]' : '';
     if (!grouped[cat]) grouped[cat] = [];
     const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
-    if (total > 0) grouped[cat].push({ id, name: item.name + loc, total });
+    if (total > 0) grouped[cat].push({ id, name: item.name, total });
   });
   Object.keys(grouped).sort().forEach(cat => {
     const og = document.createElement('optgroup');
