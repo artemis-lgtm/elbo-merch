@@ -1240,6 +1240,34 @@ function renderStats() {
     html += `<div class="stat-card"><h3>Year-End Summaries</h3>${summaryBtns}<p style="color:var(--dim);font-size:0.75em;margin-top:8px">Summaries auto-generate when a new year starts. Use buttons above to generate manually.</p></div>`;
   }
 
+  // Restock History
+  const restocks = salesLog.filter(s => s.action === 'added' || s.action === 'restock').sort((a,b) => b.ts - a.ts);
+  if (restocks.length) {
+    html += `<div class="stat-card"><h3>Restock History</h3>`;
+    restocks.forEach(s => {
+      const d = new Date(s.ts);
+      const dateStr = d.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'});
+      const timeStr = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+      const sizes = s.sizeBreakdown || '';
+      const who = s.user || '';
+      html += `<div style="border-bottom:1px solid rgba(255,255,255,0.08);padding:10px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;color:var(--text)">${s.itemName}</span>
+          <span style="color:var(--green);font-weight:600">+${s.qty} units</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="color:var(--dim);font-size:0.85em">${sizes ? sizes : ''}</span>
+          <span style="color:var(--dim);font-size:0.85em">$${(s.totalCost||0).toLocaleString()} cost</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="color:var(--dim);font-size:0.8em">${dateStr} ${timeStr}</span>
+          <span style="color:var(--dim);font-size:0.8em">${who}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
   document.getElementById('stats-content').innerHTML = html;
 }
 
