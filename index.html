@@ -764,6 +764,8 @@ function recordSale() {
   const costKey = item.costKey === 'custom' ? 'custom-'+sellState.itemId : (item.costKey || 'default');
   const cost = COST[costKey] || COST.default;
 
+  const isOnline = item.location === 'storage';
+  const noteVal = document.getElementById('sell-note').value.trim();
   const sale = {
     ts: Date.now(),
     itemId: sellState.itemId,
@@ -776,10 +778,23 @@ function recordSale() {
     total: price * sellState.qty,
     cost: cost * sellState.qty,
     discount: sellState.discount === 'custom' ? 'custom' : (sellState.discount * 100) + '%',
-    note: document.getElementById('sell-note').value.trim(),
+    note: isOnline ? ('ONLINE ORDER' + (noteVal ? ' — ' + noteVal : '')) : noteVal,
+    channel: isOnline ? 'online' : 'in-store',
     user: currentUser,
     voided: false
   };
+
+  // If storage item, require confirmation first
+  if (isOnline && !sellState._storageConfirmed) {
+    document.getElementById('storage-confirm').classList.add('open');
+    document.getElementById('storage-confirm-yes').onclick = function() {
+      document.getElementById('storage-confirm').classList.remove('open');
+      sellState._storageConfirmed = true;
+      recordSale();
+    };
+    return;
+  }
+  sellState._storageConfirmed = false;
 
   // Update Firebase
   const newQty = avail - sellState.qty;
