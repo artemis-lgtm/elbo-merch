@@ -39,8 +39,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .category-header { font-size:1.1em; color:var(--accent2); margin:20px 0 8px; padding-bottom:4px; border-bottom:1px solid var(--border); }
 .category-header:first-child { margin-top:0; }
 .item-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:8px; }
+.item-card.sellable { cursor:pointer; transition:border-color 0.15s; }
+.item-card.sellable:active { border-color:var(--blue); }
 .item-card .item-name { font-weight:600; margin-bottom:6px; display:flex; justify-content:space-between; }
 .item-card .item-total { color:var(--green); font-size:0.9em; }
+.item-card .tap-hint { color:var(--dim); font-size:0.7em; margin-top:4px; }
+
+/* Quick-sell modal */
+.qs-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; }
+.qs-overlay.open { display:flex; align-items:flex-end; justify-content:center; }
+.qs-sheet { background:var(--bg); border-top:2px solid var(--blue); border-radius:16px 16px 0 0; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; padding:20px 16px 32px; }
+.qs-sheet h3 { margin:0 0 12px; color:var(--blue); font-size:1.1em; }
+.qs-sheet .qs-close { position:absolute; top:12px; right:16px; background:none; border:none; color:var(--dim); font-size:1.4em; cursor:pointer; }
+.qs-sizes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.qs-size-btn { padding:10px 16px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-size:1em; cursor:pointer; touch-action:manipulation; min-width:60px; text-align:center; }
+.qs-size-btn.selected { background:var(--blue); color:#fff; border-color:var(--blue); }
+.qs-size-btn.zero { opacity:0.3; pointer-events:none; }
+.qs-size-btn .qs-avail { display:block; font-size:0.75em; color:var(--dim); margin-top:2px; }
+.qs-size-btn.selected .qs-avail { color:rgba(255,255,255,0.7); }
 .size-grid { display:flex; flex-wrap:wrap; gap:6px; }
 .size-chip { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:0.8em; min-width:55px; text-align:center; }
 .size-chip .sz { color:var(--dim); }
@@ -867,6 +883,114 @@ function adjQtyMax(mode) {
   }
 }
 
+// ============ QUICK SELL (from inventory tap) ============
+let qsState = { itemId:null, size:null, qty:1, discount:0 };
+
+function openQuickSell(id) {
+  const item = inventory[id];
+  if (!item) return;
+  qsState = { itemId:id, size:null, qty:1, discount:0 };
+  document.getElementById('qs-title').textContent = item.name;
+  const grid = document.getElementById('qs-sizes');
+  grid.innerHTML = '';
+  sortedSizes(item.sizes).forEach(([sz, ct]) => {
+    grid.innerHTML += `<div class="qs-size-btn${ct===0?' zero':''}" data-sz="${sz}" onclick="selectQsSize('${sz}')">${sz}<span class="qs-avail">${ct} left</span></div>`;
+  });
+  document.getElementById('qs-details').style.display = 'none';
+  document.getElementById('qs-custom-price').style.display = 'none';
+  document.getElementById('qs-note').value = '';
+  document.getElementById('qs-overlay').classList.add('open');
+}
+
+function closeQuickSell() {
+  document.getElementById('qs-overlay').classList.remove('open');
+  qsState = { itemId:null, size:null, qty:1, discount:0 };
+}
+
+function selectQsSize(sz) {
+  qsState.size = sz; qsState.qty = 1; qsState.discount = 0;
+  document.querySelectorAll('.qs-size-btn').forEach(b => b.classList.toggle('selected', b.dataset.sz===sz));
+  document.querySelectorAll('#qs-details .disc-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#qs-details .disc-btn[data-disc="0"]').classList.add('active');
+  document.getElementById('qs-custom-price').style.display = 'none';
+  document.getElementById('qs-details').style.display = 'block';
+  updateQsTotal();
+}
+
+function adjQsQty(d) {
+  const max = (inventory[qsState.itemId]?.sizes||{})[qsState.size] || 0;
+  qsState.qty = Math.max(1, Math.min(max, qsState.qty + d));
+  updateQsTotal();
+}
+
+function adjQsQtyMax() {
+  const max = (inventory[qsState.itemId]?.sizes||{})[qsState.size] || 0;
+  qsState.qty = Math.max(1, max);
+  updateQsTotal();
+}
+
+function setQsDiscount(d) {
+  qsState.discount = d;
+  document.querySelectorAll('#qs-details .disc-btn').forEach(b => b.classList.remove('active'));
+  if (d === 'custom') {
+    document.querySelector('#qs-details .disc-btn[data-disc="custom"]').classList.add('active');
+    document.getElementById('qs-custom-price').style.display = 'block';
+    document.getElementById('qs-custom-price').focus();
+  } else {
+    document.querySelector(`#qs-details .disc-btn[data-disc="${d}"]`).classList.add('active');
+    document.getElementById('qs-custom-price').style.display = 'none';
+  }
+  updateQsTotal();
+}
+
+function getQsPrice() {
+  if (qsState.discount === 'custom') return parseFloat(document.getElementById('qs-custom-price').value) || 0;
+  const retail = PRICING[inventory[qsState.itemId]?.type]?.retail || 25;
+  return retail * (1 - qsState.discount);
+}
+
+function updateQsTotal() {
+  const p = getQsPrice();
+  document.getElementById('qs-qty-display').textContent = qsState.qty;
+  document.getElementById('qs-unit-price').textContent = '$' + p.toFixed(0);
+  document.getElementById('qs-total').textContent = '$' + (p * qsState.qty).toFixed(0);
+}
+
+function recordQuickSale() {
+  const item = inventory[qsState.itemId];
+  if (!item || !qsState.size) return;
+  const avail = (item.sizes||{})[qsState.size] || 0;
+  if (qsState.qty > avail) { showToast('Not enough stock!'); return; }
+
+  const price = getQsPrice();
+  const costKey = item.costKey === 'custom' ? 'custom-'+qsState.itemId : (item.costKey || 'default');
+  const cost = COST[costKey] || COST.default;
+
+  const sale = {
+    ts: Date.now(),
+    itemId: qsState.itemId,
+    itemName: item.name,
+    type: item.type,
+    location: item.location,
+    size: qsState.size,
+    qty: qsState.qty,
+    unitPrice: price,
+    total: price * qsState.qty,
+    cost: cost * qsState.qty,
+    discount: qsState.discount === 'custom' ? 'custom' : (qsState.discount * 100) + '%',
+    note: document.getElementById('qs-note').value.trim(),
+    user: currentUser,
+    voided: false
+  };
+
+  const newQty = avail - qsState.qty;
+  db.ref(`inventory/${qsState.itemId}/sizes/${qsState.size}`).set(newQty);
+  db.ref('sales').push(sale);
+
+  showToast(`Sold ${qsState.qty}x ${item.name} (${qsState.size}) - $${sale.total}`);
+  closeQuickSell();
+}
+
 function executeTransfer() {
   const { from, to, itemId, size, qty } = transferState;
   if (!itemId || !size || !to) return;
@@ -937,10 +1061,11 @@ function renderInventory(filter = '') {
       html += `<div class="category-header">${cat}</div>`;
       items.forEach(([id,item]) => {
         const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
-        html += `<div class="item-card"><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
+        const isSellable = loc === 'office' && total > 0;
+        html += `<div class="item-card${isSellable?' sellable':''}"${isSellable?` onclick="openQuickSell('${id}')"`:''}><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
           <div class="size-grid">${sortedSizes(item.sizes).map(([sz,ct]) =>
             `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
-          ).join('')}</div></div>`;
+          ).join('')}</div>${isSellable?'<div class="tap-hint">Tap to sell</div>':''}</div>`;
       });
     });
   });
@@ -1548,5 +1673,37 @@ db.ref('customCosts').on('value', snap => {
   Object.entries(data).forEach(([k,v]) => { COST['custom-'+k] = v; });
 });
 </script>
+<!-- Quick-sell overlay -->
+<div class="qs-overlay" id="qs-overlay" onclick="if(event.target===this)closeQuickSell()">
+  <div class="qs-sheet" style="position:relative">
+    <button class="qs-close" onclick="closeQuickSell()">&times;</button>
+    <h3 id="qs-title">Sell Item</h3>
+    <div class="qs-sizes" id="qs-sizes"></div>
+    <div id="qs-details" style="display:none">
+      <div class="sell-qty">
+        <button onclick="adjQsQty(-10)" class="qty-shortcut">-10</button>
+        <button onclick="adjQsQty(-1)">-</button>
+        <span id="qs-qty-display">1</span>
+        <button onclick="adjQsQty(1)">+</button>
+        <button onclick="adjQsQty(10)" class="qty-shortcut">+10</button>
+        <button onclick="adjQsQtyMax()" class="qty-shortcut max-btn">MAX</button>
+      </div>
+      <div class="discount-row">
+        <div class="disc-btn active" data-disc="0" onclick="setQsDiscount(0)">Full Price</div>
+        <div class="disc-btn" data-disc="0.5" onclick="setQsDiscount(0.5)">50% Off</div>
+        <div class="disc-btn" data-disc="1" onclick="setQsDiscount(1)">Free</div>
+        <div class="disc-btn" data-disc="custom" onclick="setQsDiscount('custom')">Custom</div>
+      </div>
+      <input type="number" class="custom-price-input" id="qs-custom-price" placeholder="Enter custom price" oninput="updateQsTotal()" style="display:none" />
+      <div class="price-row"><span class="label">Unit Price</span><span class="val" id="qs-unit-price">$0</span></div>
+      <div class="price-row"><span class="label">Total</span><span class="val" id="qs-total">$0</span></div>
+      <div class="f-section" style="margin-top:8px">
+        <label>Note (optional)</label>
+        <input type="text" class="f-input" id="qs-note" placeholder="e.g. staff comp, promo..." style="margin-bottom:0" />
+      </div>
+      <button class="action-btn" onclick="recordQuickSale()">Record Sale</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
