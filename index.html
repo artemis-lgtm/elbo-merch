@@ -57,6 +57,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .qs-size-btn.zero { opacity:0.3; pointer-events:none; }
 .qs-size-btn .qs-avail { display:block; font-size:0.75em; color:var(--dim); margin-top:2px; }
 .qs-size-btn.selected .qs-avail { color:rgba(255,255,255,0.7); }
+
+/* Storage sale confirmation */
+.storage-confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1001; }
+.storage-confirm-overlay.open { display:flex; align-items:center; justify-content:center; }
+.storage-confirm-box { background:var(--bg); border:2px solid var(--yellow); border-radius:12px; padding:24px 20px; max-width:360px; width:90%; text-align:center; }
+.storage-confirm-box h3 { color:var(--yellow); margin:0 0 8px; font-size:1.1em; }
+.storage-confirm-box p { color:var(--dim); font-size:0.9em; margin:0 0 20px; line-height:1.5; }
+.storage-confirm-box .confirm-btns { display:flex; gap:10px; justify-content:center; }
+.storage-confirm-box .confirm-btns button { flex:1; padding:12px; border:none; border-radius:8px; font-size:1em; font-weight:600; cursor:pointer; touch-action:manipulation; }
+.storage-confirm-box .btn-yes { background:var(--blue); color:#fff; }
+.storage-confirm-box .btn-no { background:var(--surface); color:var(--text); border:1px solid var(--border); }
 .size-grid { display:flex; flex-wrap:wrap; gap:6px; }
 .size-chip { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:0.8em; min-width:55px; text-align:center; }
 .size-chip .sz { color:var(--dim); }
@@ -663,11 +674,11 @@ function populateSellDropdown() {
   sel.innerHTML = '<option value="">-- Choose Item --</option>';
   const grouped = {};
   Object.entries(inventory).forEach(([id, item]) => {
-    if (item.location === 'storage') return; // Sales only from office inventory
     const cat = PRICING[item.type]?.category || 'Other';
+    const loc = item.location === 'storage' ? ' [Storage]' : '';
     if (!grouped[cat]) grouped[cat] = [];
     const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
-    if (total > 0) grouped[cat].push({ id, name: item.name, total });
+    if (total > 0) grouped[cat].push({ id, name: item.name + loc, total });
   });
   Object.keys(grouped).sort().forEach(cat => {
     const og = document.createElement('optgroup');
@@ -883,6 +894,18 @@ function adjQtyMax(mode) {
   }
 }
 
+// ============ STORAGE SALE CONFIRMATION ============
+function confirmStorageSale(id) {
+  document.getElementById('storage-confirm').classList.add('open');
+  document.getElementById('storage-confirm-yes').onclick = function() {
+    closeStorageConfirm();
+    openQuickSell(id);
+  };
+}
+function closeStorageConfirm() {
+  document.getElementById('storage-confirm').classList.remove('open');
+}
+
 // ============ QUICK SELL (from inventory tap) ============
 let qsState = { itemId:null, size:null, qty:1, discount:0 };
 
@@ -966,6 +989,8 @@ function recordQuickSale() {
   const costKey = item.costKey === 'custom' ? 'custom-'+qsState.itemId : (item.costKey || 'default');
   const cost = COST[costKey] || COST.default;
 
+  const isOnline = item.location === 'storage';
+  const noteVal = document.getElementById('qs-note').value.trim();
   const sale = {
     ts: Date.now(),
     itemId: qsState.itemId,
@@ -978,7 +1003,8 @@ function recordQuickSale() {
     total: price * qsState.qty,
     cost: cost * qsState.qty,
     discount: qsState.discount === 'custom' ? 'custom' : (qsState.discount * 100) + '%',
-    note: document.getElementById('qs-note').value.trim(),
+    note: isOnline ? ('ONLINE ORDER' + (noteVal ? ' — ' + noteVal : '')) : noteVal,
+    channel: isOnline ? 'online' : 'in-store',
     user: currentUser,
     voided: false
   };
@@ -1061,11 +1087,14 @@ function renderInventory(filter = '') {
       html += `<div class="category-header">${cat}</div>`;
       items.forEach(([id,item]) => {
         const total = Object.values(item.sizes||{}).reduce((a,b) => a+b, 0);
-        const isSellable = loc === 'office' && total > 0;
-        html += `<div class="item-card${isSellable?' sellable':''}"${isSellable?` onclick="openQuickSell('${id}')"`:''}><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
+        const isSellable = total > 0;
+        const isStorage = loc === 'storage';
+        const clickFn = isStorage ? `confirmStorageSale('${id}')` : `openQuickSell('${id}')`;
+        const hint = isStorage ? 'Tap to sell (online orders)' : 'Tap to sell';
+        html += `<div class="item-card${isSellable?' sellable':''}"${isSellable?` onclick="${clickFn}"`:''}><div class="item-name"><span>${item.name}</span><span class="item-total">${total} units</span></div>
           <div class="size-grid">${sortedSizes(item.sizes).map(([sz,ct]) =>
             `<div class="size-chip${ct===0?' zero':''}"><span class="sz">${sz}</span> <span class="ct">${ct}</span></div>`
-          ).join('')}</div>${isSellable?'<div class="tap-hint">Tap to sell</div>':''}</div>`;
+          ).join('')}</div>${isSellable?`<div class="tap-hint">${hint}</div>`:''}</div>`;
       });
     });
   });
@@ -1673,6 +1702,18 @@ db.ref('customCosts').on('value', snap => {
   Object.entries(data).forEach(([k,v]) => { COST['custom-'+k] = v; });
 });
 </script>
+<!-- Storage sale confirmation -->
+<div class="storage-confirm-overlay" id="storage-confirm" onclick="if(event.target===this)closeStorageConfirm()">
+  <div class="storage-confirm-box">
+    <h3>Online Order?</h3>
+    <p>Storage unit sales are reserved for online orders only. In-store sales should be made from office inventory.</p>
+    <div class="confirm-btns">
+      <button class="btn-no" onclick="closeStorageConfirm()">Cancel</button>
+      <button class="btn-yes" id="storage-confirm-yes">Yes, Online Sale</button>
+    </div>
+  </div>
+</div>
+
 <!-- Quick-sell overlay -->
 <div class="qs-overlay" id="qs-overlay" onclick="if(event.target===this)closeQuickSell()">
   <div class="qs-sheet" style="position:relative">
