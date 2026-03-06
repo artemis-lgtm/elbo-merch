@@ -56,8 +56,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .size-sell-btn { padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:6px; cursor:pointer; text-align:center; font-size:0.9em; }
 .size-sell-btn.selected { border-color:var(--accent); background:rgba(255,59,59,0.15); color:var(--accent); }
 .size-sell-btn .avail { font-size:0.7em; color:var(--dim); display:block; }
-.sell-qty { display:flex; align-items:center; gap:12px; justify-content:center; margin:12px 0; }
-.sell-qty button { width:44px; height:44px; font-size:1.3em; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:6px; cursor:pointer; }
+.sell-qty { display:flex; align-items:center; gap:8px; justify-content:center; margin:12px 0; flex-wrap:wrap; }
+.sell-qty button { width:44px; height:44px; font-size:1.3em; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:6px; cursor:pointer; touch-action:manipulation; }
+.sell-qty .qty-shortcut { width:auto; padding:0 10px; height:36px; font-size:0.85em; font-weight:600; }
+.sell-qty .qty-shortcut.max-btn { background:var(--blue); color:#fff; border-color:var(--blue); }
 .sell-qty span { font-size:1.5em; min-width:40px; text-align:center; }
 .price-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--border); margin-top:8px; }
 .price-row .label { color:var(--dim); }
@@ -82,6 +84,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .log-entry .amount.voided { color:var(--accent); text-decoration:line-through; }
 .log-entry.voided { opacity:0.5; }
 .log-entry.addition { border-left:3px solid var(--blue); }
+.log-entry.transfer-entry { border-left:3px solid var(--yellow); }
 .log-entry .amount.cost { color:var(--accent2); }
 .void-btn { background:none; border:1px solid var(--accent); color:var(--accent); padding:3px 8px; border-radius:4px; cursor:pointer; font-size:0.75em; margin-top:4px; }
 .void-btn:hover { background:rgba(255,59,59,0.15); }
@@ -251,9 +254,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div id="sell-details" style="display:none">
       <div class="sell-qty">
+        <button onclick="adjQty(-10)" class="qty-shortcut">-10</button>
         <button onclick="adjQty(-1)">-</button>
         <span id="sell-qty-display">1</span>
         <button onclick="adjQty(1)">+</button>
+        <button onclick="adjQty(10)" class="qty-shortcut">+10</button>
+        <button onclick="adjQtyMax('sell')" class="qty-shortcut max-btn">MAX</button>
       </div>
       <div class="discount-row">
         <div class="disc-btn active" data-disc="0" onclick="setDiscount(0)">Full Price</div>
@@ -309,9 +315,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div id="transfer-qty-section" style="display:none">
       <div class="sell-qty">
+        <button onclick="adjTransferQty(-10)" class="qty-shortcut">-10</button>
         <button onclick="adjTransferQty(-1)">-</button>
         <span id="transfer-qty-display">1</span>
         <button onclick="adjTransferQty(1)">+</button>
+        <button onclick="adjTransferQty(10)" class="qty-shortcut">+10</button>
+        <button onclick="adjQtyMax('transfer')" class="qty-shortcut max-btn">MAX</button>
       </div>
       <div class="transfer-arrow" id="transfer-direction"></div>
       <button class="action-btn blue" onclick="executeTransfer()">Transfer</button>
@@ -506,6 +515,7 @@ const INIT_INVENTORY = {
 // ============ STATE ============
 let currentUser = null;
 let inventory = {};
+let transferLog = [];
 let salesLog = [];
 let sellState = { itemId:null, size:null, qty:1, discount:0 };
 let transferState = { from:null, to:null, itemId:null, size:null, qty:1 };
@@ -598,6 +608,14 @@ function bootApp() {
   });
 
   // Listen for yearly summaries
+  db.ref('transfers').on('value', snap => {
+    transferLog = [];
+    snap.forEach(c => { transferLog.push({ _key: c.key, ...c.val() }); });
+    transferLog.sort((a,b) => (b.ts||0) - (a.ts||0));
+    renderLog();
+    renderStats();
+  });
+
   db.ref('yearly-summaries').on('value', snap => {
     yearlySummaries = snap.val() || {};
     renderLog();
@@ -837,6 +855,18 @@ function adjTransferQty(d) {
   document.getElementById('transfer-qty-display').textContent = transferState.qty;
 }
 
+function adjQtyMax(mode) {
+  if (mode === 'sell') {
+    const max = (inventory[sellState.itemId]?.sizes||{})[sellState.size] || 0;
+    sellState.qty = Math.max(1, max);
+    updateSellTotal();
+  } else {
+    const max = (inventory[transferState.itemId]?.sizes||{})[transferState.size] || 0;
+    transferState.qty = Math.max(1, max);
+    document.getElementById('transfer-qty-display').textContent = transferState.qty;
+  }
+}
+
 function executeTransfer() {
   const { from, to, itemId, size, qty } = transferState;
   if (!itemId || !size || !to) return;
@@ -938,8 +968,21 @@ function renderLog() {
     filtered = salesLog.filter(s => s.ts >= ys && s.ts < ye);
   }
 
-  // Merge yearly summaries into the display list
+  // Merge transfers and yearly summaries into the display list
   let combined = filtered.map(s => ({...s, _type: 'sale'}));
+
+  // Add transfers
+  let filteredTransfers = transferLog;
+  if (logPeriod === 'today') filteredTransfers = transferLog.filter(s => localDateStr(new Date(s.ts)) === todayStr);
+  else if (logPeriod === 'week') filteredTransfers = transferLog.filter(s => new Date(s.ts) >= weekAgo);
+  else if (logPeriod === 'month') filteredTransfers = transferLog.filter(s => new Date(s.ts) >= monthStart);
+  else if (logPeriod.startsWith('year-')) {
+    const yr = parseInt(logPeriod.slice(5));
+    const ys = new Date(yr, 0, 1).getTime(), ye = new Date(yr+1, 0, 1).getTime();
+    filteredTransfers = transferLog.filter(s => s.ts >= ys && s.ts < ye);
+  }
+  filteredTransfers.forEach(t => combined.push({...t, _type: 'transfer'}));
+
   Object.values(yearlySummaries).forEach(summary => {
     if (!summary || !summary.ts) return;
     let include = false;
@@ -983,6 +1026,20 @@ function renderLog() {
             <div class="meta">${date} ${time} by ${s.user} — +${s.qty} units (${s.sizeBreakdown}) → ${locName}</div>
           </div>
           <div class="amount cost">-$${(s.totalCost||0).toFixed(0)}</div>
+        </div>
+      </div>`;
+    }
+
+    // Transfer entry
+    if (s._type === 'transfer') {
+      const locNames = { office:'Office', storage:'Storage' };
+      return `<div class="log-entry transfer-entry">
+        <div class="log-top">
+          <div class="info">
+            <div class="item-sold">TRANSFER: ${s.itemName} (${s.size})</div>
+            <div class="meta">${date} ${time} by ${s.user} — ${s.qty}x ${locNames[s.from]||s.from} → ${locNames[s.to]||s.to}</div>
+          </div>
+          <div class="amount" style="color:var(--blue)">↔ ${s.qty}</div>
         </div>
       </div>`;
     }
@@ -1238,6 +1295,29 @@ function renderStats() {
   }).join('');
   if (summaryBtns) {
     html += `<div class="stat-card"><h3>Year-End Summaries</h3>${summaryBtns}<p style="color:var(--dim);font-size:0.75em;margin-top:8px">Summaries auto-generate when a new year starts. Use buttons above to generate manually.</p></div>`;
+  }
+
+  // Transfer History
+  if (transferLog.length) {
+    html += `<div class="stat-card"><h3>Transfer History</h3>`;
+    transferLog.forEach(t => {
+      const d = new Date(t.ts);
+      const dateStr = d.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'});
+      const timeStr = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+      const locNames = { office:'Office', storage:'Storage' };
+      html += `<div style="border-bottom:1px solid rgba(255,255,255,0.08);padding:10px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;color:var(--text)">${t.itemName} (${t.size})</span>
+          <span style="color:var(--blue);font-weight:600">↔ ${t.qty}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="color:var(--dim);font-size:0.85em">${locNames[t.from]||t.from} → ${locNames[t.to]||t.to}</span>
+          <span style="color:var(--dim);font-size:0.85em">${t.user||''}</span>
+        </div>
+        <div style="margin-top:2px"><span style="color:var(--dim);font-size:0.8em">${dateStr} ${timeStr}</span></div>
+      </div>`;
+    });
+    html += `</div>`;
   }
 
   // Restock History
