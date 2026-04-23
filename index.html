@@ -387,6 +387,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
           <option value="tshirt">T-Shirt ($25)</option><option value="longsleeve">Long Sleeve ($40)</option>
           <option value="hoodie">Hoodie ($45)</option><option value="hat">Hat ($30)</option>
           <option value="crop">Crop Top ($25)</option><option value="jersey">Jersey ($25)</option>
+          <option value="tank">Tank ($25)</option>
         </select>
       </div>
       <div class="f-section"><label>Location</label>
@@ -428,6 +429,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             <option value="tshirt">T-Shirt ($25)</option><option value="longsleeve">Long Sleeve ($40)</option>
             <option value="hoodie">Hoodie ($45)</option><option value="hat">Hat ($30)</option>
             <option value="crop">Crop Top ($25)</option><option value="jersey">Jersey ($25)</option>
+            <option value="tank">Tank ($25)</option>
           </select>
         </div>
         <div class="f-section"><label>Location</label>
@@ -467,8 +469,9 @@ const PRICING = {
   hat: { retail: 30, category: 'Hats' },
   crop: { retail: 25, category: 'Crop Tops' },
   jersey: { retail: 25, category: 'Jerseys' },
+  tank: { retail: 25, category: 'Tanks' },
 };
-const COST = { neon:10, camo:16, hat:12, 'hat-dc':14.75, hoodie:17, default:12 };
+const COST = { neon:10, camo:16, hat:12, 'hat-dc':14.75, hoodie:17, tank:11.20, default:12 };
 const SIZE_ORDER = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','OS'];
 function sortedSizes(sizes) { return Object.entries(sizes||{}).sort((a,b) => { const ai = SIZE_ORDER.indexOf(a[0]), bi = SIZE_ORDER.indexOf(b[0]); return (ai===-1?99:ai) - (bi===-1?99:bi); }); }
 
@@ -539,6 +542,7 @@ const INIT_INVENTORY = {
   'sto-neon-hoodie': { name:'Neon Hoodie', type:'hoodie', location:'storage', costKey:'hoodie', sizes:{S:6,M:25,XL:4,XXL:77} },
   'sto-hat-dc-red': { name:'Drinking Club Red Hat', type:'hat', location:'storage', costKey:'hat-dc', sizes:{OS:300} },
   'sto-hat-dc-blue': { name:'Drinking Club Blue Hat', type:'hat', location:'storage', costKey:'hat-dc', sizes:{OS:300} },
+  'sto-racer-tank-black-ladies': { name:'Black Racer Tank (Ladies)', type:'tank', location:'storage', costKey:'tank', sizes:{XS:100,S:100,M:100,L:100,XL:50,XXL:50} },
 };
 
 // ============ STATE ============
