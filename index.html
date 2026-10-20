@@ -468,7 +468,7 @@ const PRICING = {
   crop: { retail: 25, category: 'Crop Tops' },
   jersey: { retail: 25, category: 'Jerseys' },
 };
-const COST = { neon:10, camo:16, hat:12, 'hat-dc':14.75, hoodie:17, tank:11.20, default:12 };
+const COST = { neon:10, camo:16, hat:12, 'hat-dc':14.75, hoodie:17, tank:11.20, july4:11.30, default:12 };
 const SIZE_ORDER = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','OS'];
 function sortedSizes(sizes) { return Object.entries(sizes||{}).sort((a,b) => { const ai = SIZE_ORDER.indexOf(a[0]), bi = SIZE_ORDER.indexOf(b[0]); return (ai===-1?99:ai) - (bi===-1?99:bi); }); }
 
@@ -483,6 +483,7 @@ const INIT_INVENTORY = {
   'tkachuk-red': { name:'Tkachuk Red Tee', type:'tshirt', location:'office', sizes:{S:60,M:19,L:12,XL:12,XXL:23} },
   'black-old-logo': { name:'Black (Old Logo) Tee [DISCONTINUED]', type:'tshirt', location:'office', sizes:{S:20,L:1} },
   'rwb-tee': { name:'Red, White, Blue Tee', type:'tshirt', location:'office', sizes:{S:19,M:33,XL:7,XXL:1} },
+  'july4-tee': { name:'4th of July Tee (Blue Jean)', type:'tshirt', location:'office', costKey:'july4', sizes:{S:50,M:75,L:150,XL:125,XXL:75,XXXL:25} },
   'wbr-90s': { name:"White, Black & Red 90's Logo Tee", type:'tshirt', location:'office', sizes:{S:11,XXXL:2} },
   'green-longsleeve': { name:'New Green Long Sleeve', type:'longsleeve', location:'office', sizes:{M:16,L:12,XXL:18,XXXL:3} },
   'coral-ls-comfort': { name:'Comfort Color LS Coral', type:'longsleeve', location:'office', sizes:{S:2,XXL:8} },
@@ -531,6 +532,8 @@ const INIT_INVENTORY = {
   'sto-hat-usd-white': { name:'Upside Down Logo White Hat', type:'hat', location:'storage', costKey:'hat', sizes:{OS:497} },
   'sto-camo-tee': { name:'Camo Tee', type:'tshirt', location:'storage', costKey:'camo', sizes:{S:29} },
   'sto-lightgreen-tee': { name:'Light Green Tee', type:'tshirt', location:'storage', sizes:{S:30,M:36,L:12,XL:12,XXL:48,XXXL:12} },
+  'beige-boat-show-tee': { name:'Beige Boat Show T-Shirt', type:'tshirt', location:'office', costKey:'custom', sizes:{S:28,M:58,L:37,XL:35,XXL:36} },
+  'sto-beige-boat-show-tee': { name:'Beige Boat Show T-Shirt', type:'tshirt', location:'storage', costKey:'custom', sizes:{S:20,M:40,L:20,XL:20,XXL:35} },
   'sto-neon-tee': { name:'Neon Tee', type:'tshirt', location:'storage', costKey:'neon', sizes:{S:6,M:50,L:57,XL:75,XXL:109} },
   'sto-tkachuk-tee': { name:'Red Tkachuk Tee', type:'tshirt', location:'storage', sizes:{S:8,M:3,XXL:12,XXXL:10} },
   'sto-bills-jersey': { name:'Bills/Elbo Jersey', type:'jersey', location:'storage', sizes:{XXL:47} },
