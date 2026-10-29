@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    "inventory": { ".write": "auth != null" },
+    "customCosts": { ".write": "auth != null" },
+    "yearly-summaries": { ".write": "auth != null" },
+    "transfers": {
+      "$t": { ".write": "auth != null && !data.exists() && newData.exists()" }
+    },
+    "sales": {
+      "$s": {
+        ".write": "auth != null && !data.exists() && newData.exists()",
+        "voided": { ".write": "auth != null && newData.val() === true" },
+        "voidedBy": { ".write": "auth != null && newData.isString()" },
+        "voidedAt": { ".write": "auth != null && newData.isNumber()" }
+      }
+    }
+  }
+}

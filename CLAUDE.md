@@ -11,16 +11,22 @@ Editing `INIT_INVENTORY` alone will NOT change what shows on the site. This has 
 2. Also **write directly to Firebase Realtime DB** — this is what actually makes it appear.
 3. Verify via curl GET before reporting done.
 
-### Firebase write (no auth required, DB is public-read/write per rules):
+### Firebase access needs a sign-in token (DB locked 2026-10-29)
+Rules live in `database.rules.json` (published in the console as artemis@higneyintl.com, Owner, browser profile /u/4).
+Anonymous reads/writes get 401. Signed-in devices can read everything and write inventory/customCosts/yearly-summaries;
+sales and transfers are append-only (only voided/voidedBy/voidedAt can be added to an existing sale); no root writes.
+The web apiKey is `AIzaSyDjxmNd9JXcsnlJQ2j3zaypLV-W2bpOsxU` (the old one in index.html was mistyped and invalid).
 ```bash
-curl -s -X PUT "https://elbo-merch-default-rtdb.firebaseio.com/inventory/<item-key>.json" \
+T=$(curl -s -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDjxmNd9JXcsnlJQ2j3zaypLV-W2bpOsxU" \
+  -H 'Content-Type: application/json' -d '{"returnSecureToken":true}' | python3 -c "import sys,json;print(json.load(sys.stdin)['idToken'])")
+curl -s -X PUT "https://elbo-merch-default-rtdb.firebaseio.com/inventory/<item-key>.json?auth=$T" \
   -H "Content-Type: application/json" \
   -d '{"name":"...","type":"...","location":"storage|office","costKey":"...","sizes":{"S":N,"M":N,...}}'
 ```
 
 ### Firebase verify:
 ```bash
-curl -s "https://elbo-merch-default-rtdb.firebaseio.com/inventory/<item-key>.json"
+curl -s "https://elbo-merch-default-rtdb.firebaseio.com/inventory/<item-key>.json?auth=$T"
 ```
 
 ## Other project facts
